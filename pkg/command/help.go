@@ -64,7 +64,7 @@ func (cmd *Command) ShowHelp(globalOptions Options, args []string) ([]byte, erro
 		GlobalOptions: globalOptions,
 		HTMLOutput:    runtime.UnstyledHelpEnabled(),
 	}
-	err := _c.TemplateCommandHelp.Execute(&buf, c)
+	err := _c.HelpTemplate().Execute(&buf, c)
 	if err != nil {
 		return nil, err
 	}

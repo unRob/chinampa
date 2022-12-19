@@ -80,4 +80,12 @@ var TemplateFuncs = template.FuncMap{
 }
 
 // TemplateCommandHelp holds a template for rendering command help.
-var TemplateCommandHelp = template.Must(template.New("help").Funcs(TemplateFuncs).Parse(helpTemplateText))
+var TemplateCommandHelp *template.Template
+
+func HelpTemplate() *template.Template {
+	if TemplateCommandHelp == nil {
+		TemplateCommandHelp = template.Must(template.New("help").Funcs(TemplateFuncs).Parse(helpTemplateText))
+	}
+
+	return TemplateCommandHelp
+}
