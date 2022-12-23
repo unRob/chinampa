@@ -81,14 +81,15 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 				if opt.Default != nil {
 					def = opt.Default.(bool)
 				}
-				fs.Bool(name, def, opt.Description)
+
+				fs.BoolP(name, opt.ShortName, def, opt.Description)
 			case ValueTypeDefault, ValueTypeString:
 				opt.Type = ValueTypeString
 				def := ""
 				if opt.Default != nil {
 					def = fmt.Sprintf("%s", opt.Default)
 				}
-				fs.String(name, def, opt.Description)
+				fs.StringP(name, opt.ShortName, def, opt.Description)
 			default:
 				// ignore flag
 				logrus.Warnf("Ignoring unknown option type <%s> for option <%s>", opt.Type, name)
@@ -113,6 +114,7 @@ func (cmd *Command) ParseInput(cc *cobra.Command, args []string) error {
 
 		logrus.Debug("Validating flags")
 		if err := cmd.Options.AreValid(); err != nil {
+			logrus.Debug("Invalid flags for %s: %w", cmd.FullName(), err)
 			return err
 		}
 	}
@@ -124,6 +126,7 @@ func (cmd *Command) Run(cc *cobra.Command, args []string) error {
 	logrus.Debugf("running command %s", cmd.FullName())
 
 	if err := cmd.ParseInput(cc, args); err != nil {
+		logrus.Debugf("Parsing input to command %s failed: %s", cmd.FullName(), err)
 		return err
 	}
 

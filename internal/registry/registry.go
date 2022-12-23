@@ -218,9 +218,13 @@ func Execute(version string) error {
 	}
 	cmdRoot.SetCobra(ccRoot)
 
-	err := ccRoot.Execute()
+	current, _, err := ccRoot.Find(os.Args[1:])
 	if err != nil {
-		errors.HandleCobraExit(ccRoot, err)
+		current = ccRoot
+	}
+	err = current.Execute()
+	if err != nil {
+		errors.HandleCobraExit(current, err)
 	}
 
 	return err
