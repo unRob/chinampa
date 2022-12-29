@@ -25,43 +25,47 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ccRoot = &cobra.Command{
-	Use: "joao [--silent|-v|--verbose] [--[no-]color] [-h|--help] [--version]",
-	Annotations: map[string]string{
-		_c.ContextKeyRuntimeIndex: "joao",
-	},
-	DisableAutoGenTag: true,
-	SilenceUsage:      true,
-	SilenceErrors:     true,
-	ValidArgs:         []string{""},
-	Args: func(cmd *cobra.Command, args []string) error {
-		err := cobra.OnlyValidArgs(cmd, args)
-		if err != nil {
+func newCobraRoot(root *command.Command) *cobra.Command {
+	return &cobra.Command{
+		Use: root.Name() + " [--silent|-v|--verbose] [--[no-]color] [-h|--help] [--version]",
+		Annotations: map[string]string{
+			_c.ContextKeyRuntimeIndex: root.Name(),
+		},
+		Short:             root.Summary,
+		Long:              root.Description,
+		DisableAutoGenTag: true,
+		SilenceUsage:      true,
+		SilenceErrors:     true,
+		ValidArgs:         []string{""},
+		Args: func(cmd *cobra.Command, args []string) error {
+			err := cobra.OnlyValidArgs(cmd, args)
+			if err != nil {
 
-			suggestions := []string{}
-			bold := color.New(color.Bold)
-			for _, l := range cmd.SuggestionsFor(args[len(args)-1]) {
-				suggestions = append(suggestions, bold.Sprint(l))
+				suggestions := []string{}
+				bold := color.New(color.Bold)
+				for _, l := range cmd.SuggestionsFor(args[len(args)-1]) {
+					suggestions = append(suggestions, bold.Sprint(l))
+				}
+				errMessage := fmt.Sprintf("Unknown subcommand %s", bold.Sprint(strings.Join(args, " ")))
+				if len(suggestions) > 0 {
+					errMessage += ". Perhaps you meant " + strings.Join(suggestions, ", ") + "?"
+				}
+				return errors.NotFound{Msg: errMessage, Group: []string{}}
 			}
-			errMessage := fmt.Sprintf("Unknown subcommand %s", bold.Sprint(strings.Join(args, " ")))
-			if len(suggestions) > 0 {
-				errMessage += ". Perhaps you meant " + strings.Join(suggestions, ", ") + "?"
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				if ok, err := cmd.Flags().GetBool("version"); err == nil && ok {
+					_, err := cmd.OutOrStdout().Write([]byte(cmd.Root().Annotations["version"]))
+					return err
+				}
+				return errors.NotFound{Msg: "No subcommand provided", Group: []string{}}
 			}
-			return errors.NotFound{Msg: errMessage, Group: []string{}}
-		}
-		return nil
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 {
-			if ok, err := cmd.Flags().GetBool("version"); err == nil && ok {
-				_, err := cmd.OutOrStdout().Write([]byte(cmd.Root().Annotations["version"]))
-				return err
-			}
-			return errors.NotFound{Msg: "No subcommand provided", Group: []string{}}
-		}
 
-		return nil
-	},
+			return nil
+		},
+	}
 }
 
 func toCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command {

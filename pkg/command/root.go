@@ -18,9 +18,9 @@ import (
 )
 
 var Root = &Command{
-	Summary:     "Helps organize config for roberto",
-	Description: `﹅joao﹅ makes yaml, json, 1password and vault play along nicely.`,
-	Path:        []string{"joao"},
+	Summary:     "Replace me with chinampa.Configure",
+	Description: "",
+	Path:        []string{runtime.Executable},
 	Options: Options{
 		_c.HelpCommandName: &Option{
 			ShortName:   "h",

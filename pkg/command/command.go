@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"git.rob.mx/nidito/chinampa/internal/errors"
+	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -40,6 +41,10 @@ type Command struct {
 	Action       Action
 	runtimeFlags *pflag.FlagSet
 	Cobra        *cobra.Command
+}
+
+func (cmd *Command) IsRoot() bool {
+	return cmd.FullName() == runtime.Executable
 }
 
 func (cmd *Command) SetBindings() *Command {
@@ -114,7 +119,7 @@ func (cmd *Command) ParseInput(cc *cobra.Command, args []string) error {
 
 		logrus.Debug("Validating flags")
 		if err := cmd.Options.AreValid(); err != nil {
-			logrus.Debug("Invalid flags for %s: %w", cmd.FullName(), err)
+			logrus.Debugf("Invalid flags for %s: %w", cmd.FullName(), err)
 			return err
 		}
 	}

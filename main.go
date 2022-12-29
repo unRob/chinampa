@@ -15,12 +15,24 @@ package chinampa
 import (
 	"git.rob.mx/nidito/chinampa/internal/registry"
 	"git.rob.mx/nidito/chinampa/pkg/command"
+	"git.rob.mx/nidito/chinampa/pkg/runtime"
 )
 
 func Register(cmd *command.Command) {
-	registry.Register(cmd)
+	registry.Register(cmd.SetBindings())
 }
 
-func Execute(version string) error {
-	return registry.Execute(version)
+type Config struct {
+	Name        string
+	Version     string
+	Summary     string
+	Description string
+}
+
+func Execute(config Config) error {
+	runtime.Executable = config.Name
+	command.Root.Summary = config.Summary
+	command.Root.Description = config.Description
+	command.Root.Path = []string{runtime.Executable}
+	return registry.Execute(config.Version)
 }

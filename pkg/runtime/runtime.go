@@ -19,6 +19,8 @@ import (
 	_c "git.rob.mx/nidito/chinampa/internal/constants"
 )
 
+var Executable = "chinampa"
+
 var falseIshValues = []string{
 	"",
 	"0",

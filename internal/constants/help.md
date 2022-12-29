@@ -1,5 +1,5 @@
 {{- if not .HTMLOutput }}
-# {{ if and (not (eq .Spec.FullName "joao")) (not (eq .Command.Name "help")) }}joao {{ end }}{{ .Spec.FullName }}{{if eq .Command.Name "help"}} help{{end}}
+# {{ if and (not .Spec.IsRoot) (not (eq .Command.Name "help")) }}@chinampa@ {{ end }}{{ .Spec.FullName }}{{if eq .Command.Name "help"}} help{{end}}
 {{- else }}
 ---
 description: {{ .Command.Short }}
@@ -10,7 +10,7 @@ description: {{ .Command.Short }}
 
 ## Usage
 
-  ﹅{{ replace .Command.UseLine " [flags]" "" }}{{if .Command.HasAvailableSubCommands}} SUBCOMMAND{{end}}﹅
+  `{{ replace .Command.UseLine " [flags]" "" }}{{if .Command.HasAvailableSubCommands}} SUBCOMMAND{{end}}`
 
 {{ if .Command.HasAvailableSubCommands -}}
 ## Subcommands
@@ -37,7 +37,7 @@ description: {{ .Command.Short }}
 {{- end -}}
 
 
-{{ if and (eq .Spec.FullName "joao") (not (eq .Command.Name "help")) }}
+{{ if and .Spec.IsRoot (not (eq .Command.Name "help")) }}
 ## Description
 
 {{ .Spec.Description }}
@@ -55,7 +55,7 @@ description: {{ .Command.Short }}
 {{ end -}}
 {{- end -}}
 
-{{- if not (eq .Spec.FullName "joao") }}
+{{- if not .Spec.IsRoot }}
 ## Description
 
 {{ if not (eq .Command.Long "") }}{{ .Command.Long }}{{ else }}{{ .Spec.Description }}{{end}}

@@ -134,8 +134,7 @@ func ChildrenNames() []string {
 
 func Execute(version string) error {
 	cmdRoot := command.Root
-	ccRoot.Short = cmdRoot.Summary
-	ccRoot.Long = cmdRoot.Description
+	ccRoot := newCobraRoot(command.Root)
 	ccRoot.Annotations["version"] = version
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
 	ccRoot.Flags().AddFlagSet(cmdRoot.FlagSet())
@@ -153,7 +152,7 @@ func Execute(version string) error {
 		container := ccRoot
 		for idx, cp := range cmd.Path {
 			if idx == len(cmd.Path)-1 {
-				// logrus.Debugf("adding command %s to %s", leaf.Name(), cmd.Path[0:idx])
+				logrus.Debugf("adding command %s to %s", leaf.Name(), container.Name())
 				container.AddCommand(leaf)
 				break
 			}
