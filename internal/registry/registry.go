@@ -137,7 +137,7 @@ func Execute(version string) error {
 	ccRoot := newCobraRoot(command.Root)
 	ccRoot.Annotations["version"] = version
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
-	ccRoot.Flags().AddFlagSet(cmdRoot.FlagSet())
+	ccRoot.PersistentFlags().AddFlagSet(cmdRoot.FlagSet())
 
 	for name, opt := range cmdRoot.Options {
 		if err := ccRoot.RegisterFlagCompletionFunc(name, opt.CompletionFunction); err != nil {
@@ -214,6 +214,8 @@ func Execute(version string) error {
 				container = cc
 			}
 		}
+
+		cmd.Path = append(cmdRoot.Path, cmd.Path...)
 	}
 	cmdRoot.SetCobra(ccRoot)
 

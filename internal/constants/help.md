@@ -1,5 +1,5 @@
 {{- if not .HTMLOutput }}
-# {{ if and (not .Spec.IsRoot) (not (eq .Command.Name "help")) }}@chinampa@ {{ end }}{{ .Spec.FullName }}{{if eq .Command.Name "help"}} help{{end}}
+# {{ .Spec.FullName }}{{if eq .Command.Name "help"}} help{{end}}
 {{- else }}
 ---
 description: {{ .Command.Short }}
@@ -12,6 +12,22 @@ description: {{ .Command.Short }}
 
   `{{ replace .Command.UseLine " [flags]" "" }}{{if .Command.HasAvailableSubCommands}} SUBCOMMAND{{end}}`
 
+{{ if and .Spec.IsRoot (not (eq .Command.Name "help")) }}
+## Description
+
+{{ .Spec.Description }}
+{{ end -}}
+{{- if .Spec.HasAdditionalHelp }}
+{{ .Spec.AdditionalHelp .HTMLOutput }}
+{{ end -}}
+
+{{- if (and (not .Spec.IsRoot) .Spec.Description) }}
+## Description
+
+{{ if not (eq .Command.Long "") }}{{ .Command.Long }}{{ else }}{{ .Spec.Description }}{{end}}
+{{ end }}
+
+
 {{ if .Command.HasAvailableSubCommands -}}
 ## Subcommands
 
@@ -19,9 +35,9 @@ description: {{ .Command.Short }}
 {{ range .Command.Commands -}}
 {{- if (or .IsAvailableCommand (eq .Name "help")) -}}
 - {{ if $hh -}}
-[﹅{{ .Name }}﹅]({{.Name}})
+[`{{ .Name }}`]({{.Name}})
 {{- else -}}
-﹅{{ .Name }}﹅
+`{{ .Name }}`
 {{- end }} - {{.Short}}
 {{ end }}
 {{- end -}}
@@ -32,39 +48,23 @@ description: {{ .Command.Short }}
 
 {{ range .Spec.Arguments -}}
 
-- ﹅{{ .Name | toUpper }}{{ if .Variadic}}...{{ end }}﹅{{ if .Required }} _required_{{ end }} - {{ .Description }}
+- `{{ .Name | toUpper }}{{ if .Variadic}}...{{ end }}`{{ if .Required }} _required_{{ end }} - {{ .Description }}
 {{ end -}}
 {{- end -}}
 
 
-{{ if and .Spec.IsRoot (not (eq .Command.Name "help")) }}
-## Description
-
-{{ .Spec.Description }}
-{{ end -}}
-{{- if .Spec.HasAdditionalHelp }}
-{{ .Spec.AdditionalHelp .HTMLOutput }}
-{{ end -}}
-
-
-{{- if .Command.HasAvailableLocalFlags}}
+{{- if (and .Command.HasAvailableLocalFlags .Spec.Options) }}
 ## Options
 
 {{ range $name, $opt := .Spec.Options -}}
-- ﹅--{{ $name }}﹅ (_{{$opt.Type}}_): {{ trimSuffix $opt.Description "."}}.{{ if $opt.Default }} Default: _{{ $opt.Default }}_.{{ end }}
+- `--{{ $name }}` (_{{$opt.Type}}_): {{ trimSuffix $opt.Description "."}}.{{ if $opt.Default }} Default: _{{ $opt.Default }}_.{{ end }}
 {{ end -}}
 {{- end -}}
-
-{{- if not .Spec.IsRoot }}
-## Description
-
-{{ if not (eq .Command.Long "") }}{{ .Command.Long }}{{ else }}{{ .Spec.Description }}{{end}}
-{{ end }}
 
 {{- if .Command.HasAvailableInheritedFlags }}
 ## Global Options
 
 {{ range $name, $opt := .GlobalOptions -}}
-- ﹅--{{ $name }}﹅ (_{{$opt.Type}}_): {{$opt.Description}}.{{ if $opt.Default }} Default: _{{ $opt.Default }}_.{{ end }}
+- `--{{ $name }}` (_{{$opt.Type}}_): {{$opt.Description}}.{{ if $opt.Default }} Default: _{{ $opt.Default }}_.{{ end }}
 {{ end -}}
 {{end}}
