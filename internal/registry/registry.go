@@ -20,6 +20,8 @@ import (
 // ContextKeyRuntimeIndex is the string key used to store context in a cobra Command.
 const ContextKeyRuntimeIndex = "x-chinampa-runtime-index"
 
+var log = logrus.WithField("chinampa", "registry")
+
 var registry = &CommandRegistry{
 	kv: map[string]*command.Command{},
 }
@@ -36,7 +38,7 @@ type CommandRegistry struct {
 }
 
 func Register(cmd *command.Command) {
-	logrus.Debugf("Registering %s", cmd.FullName())
+	log.Debugf("adding to registry: %s", cmd.FullName())
 	registry.kv[cmd.FullName()] = cmd
 }
 
@@ -58,24 +60,22 @@ func CommandList() []*command.Command {
 }
 
 func Execute(version string) error {
+	log.Debug("starting execution")
 	cmdRoot := command.Root
 	ccRoot := newCobraRoot(command.Root)
 	ccRoot.Annotations["version"] = version
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
 	ccRoot.PersistentFlags().AddFlagSet(cmdRoot.FlagSet())
-	ccRoot.SetHelpCommand(commands.Help)
+	ccRoot.AddCommand(commands.Help)
 	ccRoot.AddCommand(commands.Version)
 	ccRoot.AddCommand(commands.GenerateCompletions)
 
 	for name, opt := range cmdRoot.Options {
 		if err := ccRoot.RegisterFlagCompletionFunc(name, opt.CompletionFunction); err != nil {
-			logrus.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmdRoot.FullName())
+			log.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmdRoot.FullName())
 		}
 	}
-	// ccRoot.SetHelpFunc(func(cc *cobra.Command, args []string) {
-	// 	cmdRoot.HelpRenderer(cmdRoot.Options)(cc, args)
-	// 	os.Exit(statuscode.RenderHelp)
-	// })
+
 	ccRoot.SetHelpFunc(cmdRoot.HelpRenderer(cmdRoot.Options))
 
 	for _, cmd := range CommandList() {
@@ -84,21 +84,17 @@ func Execute(version string) error {
 		for idx, cp := range cmd.Path {
 			if idx == len(cmd.Path)-1 {
 				leaf := ToCobra(cmd, cmdRoot.Options)
-				logrus.Debugf("adding command %s to %s", leaf.Name(), container.Name())
 				container.AddCommand(leaf)
+				log.Debugf("cobra: %s => %s", leaf.Name(), container.CommandPath())
 				break
 			}
 
 			query := []string{cp}
 			found := false
-			if cp == "help" && container == ccRoot {
-				container = commands.Help
-			} else {
-				for _, sub := range container.Commands() {
-					if sub.Name() == cp {
-						container = sub
-						found = true
-					}
+			for _, sub := range container.Commands() {
+				if sub.Name() == cp {
+					container = sub
+					found = true
 				}
 			}
 
@@ -152,6 +148,7 @@ func Execute(version string) error {
 				}
 				Register(groupParent)
 				cc.SetHelpFunc(groupParent.HelpRenderer(command.Options{}))
+				cc.SetHelpCommand(commands.Help)
 				container.AddCommand(cc)
 				container = cc
 			}
@@ -165,17 +162,16 @@ func Execute(version string) error {
 	if err != nil {
 		current = ccRoot
 	}
-	logrus.Debugf("Chinampa found command %s, remaining %s", current.Name(), remaining)
+	log.Debugf("exec: found command %s with args: %s", current.CommandPath(), remaining)
 
-	// if current.HasSubCommands() && current.
 	if sub, _, err := current.Find(remaining); err == nil && sub != current {
-		logrus.Debugf("Chinampa found sub-command %s, of %s", sub.Name(), current.Name())
+		log.Debugf("exec: found sub-command %s", sub.CommandPath())
 		current = sub
 	}
-	logrus.Debugf("Chinampa is going to call command %s", current.Name())
+	log.Debugf("exec: calling %s", current.CommandPath())
 	err = current.Execute()
 	if err != nil {
-		logrus.Debugf("Chinampa found error calling command %s", current.Name())
+		log.Debugf("exec: error calling %s, %s", current.CommandPath(), err)
 		errors.HandleCobraExit(current, err)
 	}
 

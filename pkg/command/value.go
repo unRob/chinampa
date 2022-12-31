@@ -87,7 +87,6 @@ func (vs *ValueSource) Resolve(currentValue string) (values []string, flag cobra
 	flag = cobra.ShellCompDirectiveDefault
 	timeout := time.Duration(vs.Timeout)
 
-	logrus.Errorf("resolving: %s", vs)
 	switch {
 	case vs.Static != nil:
 		values = *vs.Static
