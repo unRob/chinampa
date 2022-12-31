@@ -1,15 +1,5 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package registry
 
 import (
@@ -18,13 +8,17 @@ import (
 	"sort"
 	"strings"
 
-	_c "git.rob.mx/nidito/chinampa/internal/constants"
-	"git.rob.mx/nidito/chinampa/internal/errors"
+	"git.rob.mx/nidito/chinampa/internal/commands"
 	"git.rob.mx/nidito/chinampa/pkg/command"
+	"git.rob.mx/nidito/chinampa/pkg/errors"
+	"git.rob.mx/nidito/chinampa/pkg/statuscode"
 	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
+
+// ContextKeyRuntimeIndex is the string key used to store context in a cobra Command.
+const ContextKeyRuntimeIndex = "x-chinampa-runtime-index"
 
 var registry = &CommandRegistry{
 	kv: map[string]*command.Command{},
@@ -36,28 +30,9 @@ func (cmds ByPath) Len() int           { return len(cmds) }
 func (cmds ByPath) Swap(i, j int)      { cmds[i], cmds[j] = cmds[j], cmds[i] }
 func (cmds ByPath) Less(i, j int) bool { return cmds[i].FullName() < cmds[j].FullName() }
 
-type CommandTree struct {
-	Command  *command.Command `json:"command"`
-	Children []*CommandTree   `json:"children"`
-}
-
-func (t *CommandTree) Traverse(fn func(cmd *command.Command) error) error {
-	for _, child := range t.Children {
-		if err := fn(child.Command); err != nil {
-			return err
-		}
-
-		if err := child.Traverse(fn); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 type CommandRegistry struct {
 	kv     map[string]*command.Command
 	byPath []*command.Command
-	tree   *CommandTree
 }
 
 func Register(cmd *command.Command) {
@@ -82,87 +57,54 @@ func CommandList() []*command.Command {
 	return registry.byPath
 }
 
-func BuildTree(cc *cobra.Command, depth int) {
-	tree := &CommandTree{
-		Command:  fromCobra(cc),
-		Children: []*CommandTree{},
-	}
-
-	var populateTree func(cmd *cobra.Command, ct *CommandTree, maxDepth int, depth int)
-	populateTree = func(cmd *cobra.Command, ct *CommandTree, maxDepth int, depth int) {
-		newDepth := depth + 1
-		for _, subcc := range cmd.Commands() {
-			if subcc.Hidden {
-				continue
-			}
-
-			if cmd := fromCobra(subcc); cmd != nil {
-				leaf := &CommandTree{Children: []*CommandTree{}}
-				leaf.Command = cmd
-				ct.Children = append(ct.Children, leaf)
-
-				if newDepth < maxDepth {
-					populateTree(subcc, leaf, maxDepth, newDepth)
-				}
-			}
-		}
-	}
-	populateTree(cc, tree, depth, 0)
-
-	registry.tree = tree
-}
-
-func SerializeTree(serializationFn func(any) ([]byte, error)) (string, error) {
-	bytes, err := serializationFn(registry.tree)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-func ChildrenNames() []string {
-	if registry.tree == nil {
-		return []string{}
-	}
-
-	ret := make([]string, len(registry.tree.Children))
-	for idx, cmd := range registry.tree.Children {
-		ret[idx] = cmd.Command.Name()
-	}
-	return ret
-}
-
 func Execute(version string) error {
 	cmdRoot := command.Root
 	ccRoot := newCobraRoot(command.Root)
 	ccRoot.Annotations["version"] = version
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
 	ccRoot.PersistentFlags().AddFlagSet(cmdRoot.FlagSet())
+	ccRoot.SetHelpCommand(commands.Help)
+	ccRoot.AddCommand(commands.Version)
+	ccRoot.AddCommand(commands.GenerateCompletions)
 
 	for name, opt := range cmdRoot.Options {
 		if err := ccRoot.RegisterFlagCompletionFunc(name, opt.CompletionFunction); err != nil {
 			logrus.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmdRoot.FullName())
 		}
 	}
+	// ccRoot.SetHelpFunc(func(cc *cobra.Command, args []string) {
+	// 	cmdRoot.HelpRenderer(cmdRoot.Options)(cc, args)
+	// 	os.Exit(statuscode.RenderHelp)
+	// })
 	ccRoot.SetHelpFunc(cmdRoot.HelpRenderer(cmdRoot.Options))
 
 	for _, cmd := range CommandList() {
 		cmd := cmd
-		leaf := toCobra(cmd, cmdRoot.Options)
 		container := ccRoot
 		for idx, cp := range cmd.Path {
 			if idx == len(cmd.Path)-1 {
+				leaf := ToCobra(cmd, cmdRoot.Options)
 				logrus.Debugf("adding command %s to %s", leaf.Name(), container.Name())
 				container.AddCommand(leaf)
 				break
 			}
 
 			query := []string{cp}
-			if cc, _, err := container.Find(query); err == nil && cc != container {
-				container = cc
+			found := false
+			if cp == "help" && container == ccRoot {
+				container = commands.Help
 			} else {
+				for _, sub := range container.Commands() {
+					if sub.Name() == cp {
+						container = sub
+						found = true
+					}
+				}
+			}
+
+			if !found {
 				groupName := strings.Join(query, " ")
-				groupPath := append(cmd.Path[0:idx], query...) // nolint:gocritic
+				groupPath := append(cmdRoot.Path, append(cmd.Path[0:idx], query...)...) // nolint:gocritic
 				cc := &cobra.Command{
 					Use:                        cp,
 					Short:                      fmt.Sprintf("%s subcommands", groupName),
@@ -171,7 +113,7 @@ func Execute(version string) error {
 					SilenceUsage:               true,
 					SilenceErrors:              true,
 					Annotations: map[string]string{
-						_c.ContextKeyRuntimeIndex: strings.Join(groupPath, " "),
+						ContextKeyRuntimeIndex: strings.Join(groupPath, " "),
 					},
 					Args: func(cmd *cobra.Command, args []string) error {
 						if err := cobra.OnlyValidArgs(cmd, args); err == nil {
@@ -196,13 +138,13 @@ func Execute(version string) error {
 						if len(args) == 0 {
 							return errors.NotFound{Msg: "No subcommand provided", Group: []string{}}
 						}
-						os.Exit(_c.ExitStatusNotFound)
+						os.Exit(statuscode.NotFound)
 						return nil
 					},
 				}
 
 				groupParent := &command.Command{
-					Path:        cmd.Path[0 : len(cmd.Path)-1],
+					Path:        groupPath,
 					Summary:     fmt.Sprintf("%s subcommands", groupName),
 					Description: fmt.Sprintf("Runs subcommands within %s", groupName),
 					Arguments:   command.Arguments{},
@@ -219,12 +161,21 @@ func Execute(version string) error {
 	}
 	cmdRoot.SetCobra(ccRoot)
 
-	current, _, err := ccRoot.Find(os.Args[1:])
+	current, remaining, err := ccRoot.Find(os.Args[1:])
 	if err != nil {
 		current = ccRoot
 	}
+	logrus.Debugf("Chinampa found command %s, remaining %s", current.Name(), remaining)
+
+	// if current.HasSubCommands() && current.
+	if sub, _, err := current.Find(remaining); err == nil && sub != current {
+		logrus.Debugf("Chinampa found sub-command %s, of %s", sub.Name(), current.Name())
+		current = sub
+	}
+	logrus.Debugf("Chinampa is going to call command %s", current.Name())
 	err = current.Execute()
 	if err != nil {
+		logrus.Debugf("Chinampa found error calling command %s", current.Name())
 		errors.HandleCobraExit(current, err)
 	}
 

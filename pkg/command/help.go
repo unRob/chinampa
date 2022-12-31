@@ -1,22 +1,11 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package command
 
 import (
 	"bytes"
 
-	_c "git.rob.mx/nidito/chinampa/internal/constants"
-	"git.rob.mx/nidito/chinampa/internal/render"
+	"git.rob.mx/nidito/chinampa/pkg/render"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/spf13/cobra"
 )
@@ -64,7 +53,7 @@ func (cmd *Command) ShowHelp(globalOptions Options, args []string) ([]byte, erro
 		GlobalOptions: globalOptions,
 		HTMLOutput:    runtime.UnstyledHelpEnabled(),
 	}
-	err := _c.HelpTemplate(runtime.Executable).Execute(&buf, c)
+	err := render.HelpTemplate(runtime.Executable).Execute(&buf, c)
 	if err != nil {
 		return nil, err
 	}

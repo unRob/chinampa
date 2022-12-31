@@ -1,22 +1,15 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package render
 
 import (
 	"bytes"
 	"os"
+	"strings"
+	"text/template"
 
 	_c "git.rob.mx/nidito/chinampa/internal/constants"
+	"git.rob.mx/nidito/chinampa/pkg/env"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/charmbracelet/glamour"
 	"github.com/sirupsen/logrus"
@@ -43,7 +36,7 @@ func Markdown(content []byte, withColor bool) ([]byte, error) {
 	var styleFunc glamour.TermRendererOption
 
 	if withColor {
-		style := os.Getenv(_c.EnvVarHelpStyle)
+		style := os.Getenv(env.HelpStyle)
 		switch style {
 		case "dark":
 			styleFunc = glamour.WithStandardStyle("dark")
@@ -67,4 +60,28 @@ func Markdown(content []byte, withColor bool) ([]byte, error) {
 	}
 
 	return renderer.RenderBytes(content)
+}
+
+// TemplateFuncs is a FuncMap with aliases to the strings package.
+var TemplateFuncs = template.FuncMap{
+	"contains":   strings.Contains,
+	"hasSuffix":  strings.HasSuffix,
+	"hasPrefix":  strings.HasPrefix,
+	"replace":    strings.ReplaceAll,
+	"toUpper":    strings.ToUpper,
+	"toLower":    strings.ToLower,
+	"trim":       strings.TrimSpace,
+	"trimSuffix": strings.TrimSuffix,
+	"trimPrefix": strings.TrimPrefix,
+}
+
+// TemplateCommandHelp holds a template for rendering command help.
+var TemplateCommandHelp *template.Template
+
+func HelpTemplate(executableName string) *template.Template {
+	if TemplateCommandHelp == nil {
+		TemplateCommandHelp = template.Must(template.New("help").Funcs(TemplateFuncs).Parse(strings.ReplaceAll(_c.HelpTemplate, "@chinampa@", executableName)))
+	}
+
+	return TemplateCommandHelp
 }

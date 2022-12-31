@@ -1,15 +1,5 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package command
 
 import (
@@ -21,9 +11,11 @@ import (
 	"text/template"
 	"time"
 
-	_c "git.rob.mx/nidito/chinampa/internal/constants"
-	"git.rob.mx/nidito/chinampa/internal/exec"
+	"git.rob.mx/nidito/chinampa/pkg/exec"
+	"git.rob.mx/nidito/chinampa/pkg/render"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 // ValueType represent the kinds of or option.
@@ -36,6 +28,8 @@ const (
 	ValueTypeString ValueType = "string"
 	// ValueTypeBoolean is a value treated like a boolean.
 	ValueTypeBoolean ValueType = "bool"
+	// ValueTypeBoolean is a value treated like an integer.
+	ValueTypeInt ValueType = "int"
 )
 
 type SourceCommand struct {
@@ -43,7 +37,7 @@ type SourceCommand struct {
 	Args string
 }
 
-type CompletionFunc func(cmd *Command, currentValue string) (values []string, flag cobra.ShellCompDirective, err error)
+type CompletionFunc func(cmd *Command, currentValue string, config string) (values []string, flag cobra.ShellCompDirective, err error)
 
 // ValueSource represents the source for an auto-completed and/or validated option/argument.
 type ValueSource struct {
@@ -58,7 +52,7 @@ type ValueSource struct {
 	// Command runs a subcommand and returns an option for every line of stdout.
 	Command *SourceCommand `json:"command,omitempty" yaml:"command,omitempty" validate:"omitempty,excluded_with=Directories Files Func Script Static"`
 	// Func runs a function
-	Func CompletionFunc `json:"func,omitempty" yaml:"func,omitempty" validate:"omitempty,excluded_with=Command Directories Files Script Static"`
+	Func CompletionFunc `json:"-" yaml:"-" validate:"omitempty,excluded_with=Command Directories Files Script Static"`
 	// Timeout is the maximum amount of time we will wait for a Script, Command, or Func before giving up on completions/validations.
 	Timeout int `json:"timeout,omitempty" yaml:"timeout,omitempty" validate:"omitempty,excluded_with=Directories Files Static"`
 	// Suggestion if provided will only suggest autocomplete values but will not perform validation of a given value
@@ -68,6 +62,7 @@ type ValueSource struct {
 	command    *Command `json:"-" yaml:"-" validate:"-"`
 	computed   *[]string
 	flag       cobra.ShellCompDirective
+	custom     string // The app-defined key's value
 }
 
 // Validates tells if a value needs to be validated.
@@ -92,6 +87,7 @@ func (vs *ValueSource) Resolve(currentValue string) (values []string, flag cobra
 	flag = cobra.ShellCompDirectiveDefault
 	timeout := time.Duration(vs.Timeout)
 
+	logrus.Errorf("resolving: %s", vs)
 	switch {
 	case vs.Static != nil:
 		values = *vs.Static
@@ -114,7 +110,7 @@ func (vs *ValueSource) Resolve(currentValue string) (values []string, flag cobra
 				}
 			}()
 
-			values, flag, err = vs.Func(vs.command, currentValue)
+			values, flag, err = vs.Func(vs.command, currentValue, vs.custom)
 			done <- err
 		}()
 		select {
@@ -172,6 +168,8 @@ func (vs *ValueSource) Resolve(currentValue string) (values []string, flag cobra
 		if err != nil {
 			return nil, flag, err
 		}
+	default:
+		return nil, flag, fmt.Errorf("Empty value source")
 	}
 
 	vs.computed = &values
@@ -215,7 +213,7 @@ func (cmd *Command) ResolveTemplate(templateString string, currentValue string) 
 		"Current": func() string { return currentValue },
 	}
 
-	for k, v := range _c.TemplateFuncs {
+	for k, v := range render.TemplateFuncs {
 		fnMap[k] = v
 	}
 
@@ -231,4 +229,92 @@ func (cmd *Command) ResolveTemplate(templateString string, currentValue string) 
 	}
 
 	return buf.String(), nil
+}
+
+func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
+	vs.Timeout = 0
+	vs.Suggestion = false
+	vs.SuggestRaw = false
+	vs.computed = nil
+	intermediate := map[string]yaml.Node{}
+	if err := node.Decode(&intermediate); err != nil {
+		logrus.Errorf("could not decode valuesource: %s", err)
+		return err
+	}
+
+	if t, ok := intermediate["timeout"]; ok {
+
+		if err := t.Decode(&vs.Timeout); err != nil {
+			logrus.Errorf("could not decode timeout: %s", err)
+			return err
+		}
+		delete(intermediate, "timeout")
+	}
+
+	if t, ok := intermediate["suggest-only"]; ok {
+		if err := t.Decode(&vs.Suggestion); err != nil {
+			logrus.Errorf("could not decode suggest-only: %s", err)
+			return err
+		}
+		delete(intermediate, "suggest-only")
+	}
+
+	if t, ok := intermediate["suggest-raw"]; ok {
+		if err := t.Decode(&vs.SuggestRaw); err != nil {
+			logrus.Errorf("could not decode suggest-raw: %s", err)
+			return err
+		}
+		delete(intermediate, "suggest-raw")
+	}
+
+	for key, node := range intermediate {
+		if cfn, ok := customCompleters[key]; ok {
+			if err := node.Decode(&vs.custom); err != nil {
+				logrus.Errorf("could not decode custom: %s", err)
+				return err
+			}
+			vs.Func = cfn
+			break
+		}
+
+		switch key {
+		case "dirs":
+			var res string
+			if err := node.Decode(&res); err != nil {
+				return err
+			}
+			vs.Directories = &res
+		case "files":
+			res := []string{}
+			if err := node.Decode(&res); err != nil {
+				return err
+			}
+			vs.Files = &res
+		case "script":
+			if err := node.Decode(&vs.Script); err != nil {
+				return err
+			}
+		case "static":
+			static := []string{}
+			if err := node.Decode(&static); err != nil {
+				logrus.Errorf("could not decode static: %s", err)
+				return err
+			}
+			vs.Static = &static
+		case "command":
+			if err := node.Decode(&vs.Command); err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("unknown value source key: %s", key)
+		}
+	}
+
+	return nil
+}
+
+var customCompleters = map[string]CompletionFunc{}
+
+func RegisterValueSource(key string, completion CompletionFunc) {
+	customCompleters[key] = completion
 }

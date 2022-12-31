@@ -1,22 +1,13 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package command
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
-	"git.rob.mx/nidito/chinampa/internal/errors"
+	"git.rob.mx/nidito/chinampa/pkg/errors"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -38,9 +29,12 @@ type Command struct {
 	Options  Options  `json:"options" yaml:"options" validate:"dive"`
 	HelpFunc HelpFunc `json:"-" yaml:"-"`
 	// The action to take upon running
-	Action       Action
+	Action       Action `json:"-" yaml:"-"`
 	runtimeFlags *pflag.FlagSet
-	Cobra        *cobra.Command
+	Cobra        *cobra.Command `json:"-" yaml:"-"`
+	// Meta stores application specific stuff
+	Meta   any  `json:"meta" yaml:"meta"`
+	Hidden bool `json:"-" yaml:"-"`
 }
 
 func (cmd *Command) IsRoot() bool {
@@ -88,6 +82,22 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 				}
 
 				fs.BoolP(name, opt.ShortName, def, opt.Description)
+			case ValueTypeInt:
+				def := -1
+				if opt.Default != nil {
+					switch val := opt.Default.(type) {
+					case int:
+						def = opt.Default.(int)
+					case string:
+						casted, err := strconv.Atoi(val)
+						if err != nil {
+							logrus.Warnf("Could not parse default with value <%s> as integer for option <%s>", val, name)
+						}
+						def = casted
+					}
+				}
+
+				fs.IntP(name, opt.ShortName, def, opt.Description)
 			case ValueTypeDefault, ValueTypeString:
 				opt.Type = ValueTypeString
 				def := ""
@@ -119,7 +129,7 @@ func (cmd *Command) ParseInput(cc *cobra.Command, args []string) error {
 
 		logrus.Debug("Validating flags")
 		if err := cmd.Options.AreValid(); err != nil {
-			logrus.Debugf("Invalid flags for %s: %w", cmd.FullName(), err)
+			logrus.Debugf("Invalid flags for %s: %s", cmd.FullName(), err)
 			return err
 		}
 	}

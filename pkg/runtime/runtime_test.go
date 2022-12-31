@@ -1,15 +1,5 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package runtime_test
 
 import (
@@ -20,12 +10,12 @@ import (
 	"strconv"
 	"testing"
 
-	_c "git.rob.mx/nidito/chinampa/internal/constants"
+	"git.rob.mx/nidito/chinampa/pkg/env"
 	. "git.rob.mx/nidito/chinampa/pkg/runtime"
 )
 
 func TestEnabled(t *testing.T) {
-	defer func() { os.Setenv(_c.EnvVarMilpaVerbose, "") }()
+	defer func() { os.Setenv(env.Verbose, "") }()
 
 	cases := []struct {
 		Name    string
@@ -33,29 +23,34 @@ func TestEnabled(t *testing.T) {
 		Expects bool
 	}{
 		{
-			Name:    _c.EnvVarMilpaVerbose,
+			Name:    env.Verbose,
 			Func:    VerboseEnabled,
 			Expects: true,
 		},
 		{
-			Name: _c.EnvVarValidationDisabled,
+			Name:    env.Verbose,
+			Func:    SilenceEnabled,
+			Expects: false,
+		},
+		{
+			Name: env.ValidationDisabled,
 			Func: ValidationEnabled,
 		},
 		{
-			Name: _c.EnvVarMilpaUnstyled,
+			Name: env.NoColor,
 			Func: ColorEnabled,
 		},
 		{
-			Name: _c.EnvVarHelpUnstyled,
+			Name: env.HelpUnstyled,
 			Func: ColorEnabled,
 		},
 		{
-			Name:    _c.EnvVarDebug,
+			Name:    env.Debug,
 			Func:    DebugEnabled,
 			Expects: true,
 		},
 		{
-			Name:    _c.EnvVarHelpUnstyled,
+			Name:    env.HelpUnstyled,
 			Func:    UnstyledHelpEnabled,
 			Expects: true,
 		},
@@ -90,9 +85,9 @@ func TestEnabled(t *testing.T) {
 
 func TestEnvironmentMapEnabled(t *testing.T) {
 	trueString := strconv.FormatBool(true)
-	os.Setenv(_c.EnvVarMilpaForceColor, trueString)
-	os.Setenv(_c.EnvVarDebug, trueString)
-	os.Setenv(_c.EnvVarMilpaVerbose, trueString)
+	os.Setenv(env.ForceColor, trueString)
+	os.Setenv(env.Debug, trueString)
+	os.Setenv(env.Verbose, trueString)
 
 	res := EnvironmentMap()
 	if res == nil {
@@ -100,9 +95,9 @@ func TestEnvironmentMapEnabled(t *testing.T) {
 	}
 
 	expected := map[string]string{
-		_c.EnvVarMilpaForceColor: "always",
-		_c.EnvVarDebug:           trueString,
-		_c.EnvVarMilpaVerbose:    trueString,
+		env.ForceColor: "always",
+		env.Debug:      trueString,
+		env.Verbose:    trueString,
 	}
 
 	if !reflect.DeepEqual(res, expected) {
@@ -113,12 +108,12 @@ func TestEnvironmentMapEnabled(t *testing.T) {
 func TestEnvironmentMapDisabled(t *testing.T) {
 	trueString := strconv.FormatBool(true)
 	// clear COLOR
-	os.Unsetenv(_c.EnvVarMilpaForceColor)
+	os.Unsetenv(env.ForceColor)
 	// set NO_COLOR
-	os.Setenv(_c.EnvVarMilpaUnstyled, trueString)
-	os.Unsetenv(_c.EnvVarDebug)
-	os.Unsetenv(_c.EnvVarMilpaVerbose)
-	os.Setenv(_c.EnvVarMilpaSilent, trueString)
+	os.Setenv(env.NoColor, trueString)
+	os.Unsetenv(env.Debug)
+	os.Unsetenv(env.Verbose)
+	os.Setenv(env.Silent, trueString)
 
 	res := EnvironmentMap()
 	if res == nil {
@@ -126,8 +121,8 @@ func TestEnvironmentMapDisabled(t *testing.T) {
 	}
 
 	expected := map[string]string{
-		_c.EnvVarMilpaUnstyled: trueString,
-		_c.EnvVarMilpaSilent:   trueString,
+		env.NoColor: trueString,
+		env.Silent:  trueString,
 	}
 
 	if !reflect.DeepEqual(res, expected) {

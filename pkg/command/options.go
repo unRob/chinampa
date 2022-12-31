@@ -1,15 +1,5 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package command
 
 import (
@@ -17,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"git.rob.mx/nidito/chinampa/internal/errors"
+	"git.rob.mx/nidito/chinampa/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -41,60 +31,17 @@ func (opts *Options) AllKnownStr() map[string]string {
 	return col
 }
 
-// func envValue(opts Options, f *pflag.Flag) (*string, *string) {
-// 	name := f.Name
-// 	if name == _c.HelpCommandName {
-// 		return nil, nil
-// 	}
-// 	envName := ""
-// 	value := f.Value.String()
-
-// 	if cname, ok := _c.EnvFlagNames[name]; ok {
-// 		if value == "false" {
-// 			return nil, nil
-// 		}
-// 		envName = cname
-// 	} else {
-// 		envName = fmt.Sprintf("%s%s", _c.OutputPrefixOpt, strings.ToUpper(strings.ReplaceAll(name, "-", "_")))
-// 		opt := opts[name]
-// 		if opt != nil {
-// 			value = opt.ToString(true)
-// 		}
-
-// 		if value == "false" && opt.Type == ValueTypeBoolean {
-// 			// makes dealing with false flags in shell easier
-// 			value = ""
-// 		}
-// 	}
-
-// 	return &envName, &value
-// }
-
-// // ToEnv writes shell variables to dst.
-// func (opts *Options) ToEnv(command *Command, dst *[]string, prefix string) {
-// 	command.cc.Flags().VisitAll(func(f *pflag.Flag) {
-// 		envName, value := envValue(*opts, f)
-// 		if envName != nil && value != nil {
-// 			*dst = append(*dst, fmt.Sprintf("%s%s=%s", prefix, *envName, *value))
-// 		}
-// 	})
-// }
-
-// func (opts *Options) EnvMap(command *Command, dst *map[string]string) {
-// 	command.cc.Flags().VisitAll(func(f *pflag.Flag) {
-// 		envName, value := envValue(*opts, f)
-// 		if envName != nil && value != nil {
-// 			(*dst)[*envName] = *value
-// 		}
-// 	})
-// }
-
 func (opts *Options) Parse(supplied *pflag.FlagSet) {
 	// logrus.Debugf("Parsing supplied flags, %v", supplied)
 	for name, opt := range *opts {
 		switch opt.Type {
 		case ValueTypeBoolean:
 			if val, err := supplied.GetBool(name); err == nil {
+				opt.provided = val
+				continue
+			}
+		case ValueTypeInt:
+			if val, err := supplied.GetInt(name); err == nil {
 				opt.provided = val
 				continue
 			}
@@ -121,7 +68,7 @@ func (opts *Options) AreValid() error {
 // Option represents a command line flag.
 type Option struct {
 	ShortName   string       `json:"short-name,omitempty" yaml:"short-name,omitempty"` // nolint:tagliatelle
-	Type        ValueType    `json:"type" yaml:"type" validate:"omitempty,oneof=string bool"`
+	Type        ValueType    `json:"type" yaml:"type" validate:"omitempty,oneof=string bool int"`
 	Description string       `json:"description" yaml:"description" validate:"required"`
 	Default     any          `json:"default,omitempty" yaml:"default,omitempty"`
 	Values      *ValueSource `json:"values,omitempty" yaml:"values,omitempty" validate:"omitempty"`
@@ -144,13 +91,20 @@ func (opt *Option) ToValue() any {
 func (opt *Option) ToString() string {
 	value := opt.ToValue()
 	stringValue := ""
-	if opt.Type == "bool" {
+	switch opt.Type {
+	case ValueTypeBoolean:
 		if value == nil {
 			stringValue = ""
 		} else {
 			stringValue = strconv.FormatBool(value.(bool))
 		}
-	} else {
+	case ValueTypeInt:
+		if value == nil {
+			stringValue = ""
+		} else {
+			stringValue = fmt.Sprintf("%i", value)
+		}
+	default:
 		if value != nil {
 			stringValue = value.(string)
 		}

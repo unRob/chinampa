@@ -1,24 +1,13 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package registry
 
 import (
 	"fmt"
 	"strings"
 
-	_c "git.rob.mx/nidito/chinampa/internal/constants"
-	"git.rob.mx/nidito/chinampa/internal/errors"
 	"git.rob.mx/nidito/chinampa/pkg/command"
+	"git.rob.mx/nidito/chinampa/pkg/errors"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
@@ -29,7 +18,7 @@ func newCobraRoot(root *command.Command) *cobra.Command {
 	return &cobra.Command{
 		Use: root.Name() + " [--silent|-v|--verbose] [--[no-]color] [-h|--help] [--version]",
 		Annotations: map[string]string{
-			_c.ContextKeyRuntimeIndex: root.Name(),
+			ContextKeyRuntimeIndex: root.Name(),
 		},
 		Short:             root.Summary,
 		Long:              root.Description,
@@ -62,13 +51,12 @@ func newCobraRoot(root *command.Command) *cobra.Command {
 				}
 				return errors.NotFound{Msg: "No subcommand provided", Group: []string{}}
 			}
-
 			return nil
 		},
 	}
 }
 
-func toCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command {
+func ToCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command {
 	localName := cmd.Name()
 	useSpec := []string{localName, "[options]"}
 	for _, arg := range cmd.Arguments {
@@ -81,8 +69,9 @@ func toCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command
 		DisableAutoGenTag: true,
 		SilenceUsage:      true,
 		SilenceErrors:     true,
+		Hidden:            cmd.Hidden,
 		Annotations: map[string]string{
-			_c.ContextKeyRuntimeIndex: cmd.FullName(),
+			ContextKeyRuntimeIndex: cmd.FullName(),
 		},
 		Args: func(cc *cobra.Command, supplied []string) error {
 			skipValidation, _ := cc.Flags().GetBool("skip-validation")
@@ -114,8 +103,8 @@ func toCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command
 	return cc
 }
 
-func fromCobra(cc *cobra.Command) *command.Command {
-	rtidx, hasAnnotation := cc.Annotations[_c.ContextKeyRuntimeIndex]
+func FromCobra(cc *cobra.Command) *command.Command {
+	rtidx, hasAnnotation := cc.Annotations[ContextKeyRuntimeIndex]
 	if hasAnnotation {
 		return Get(rtidx)
 	}

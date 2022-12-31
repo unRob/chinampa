@@ -1,22 +1,12 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package runtime
 
 import (
 	"os"
 	"strconv"
 
-	_c "git.rob.mx/nidito/chinampa/internal/constants"
+	"git.rob.mx/nidito/chinampa/pkg/env"
 )
 
 var Executable = "chinampa"
@@ -63,45 +53,60 @@ func isTrueIsh(val string) bool {
 }
 
 func DebugEnabled() bool {
-	return isTrueIsh(os.Getenv(_c.EnvVarDebug))
+	return isTrueIsh(os.Getenv(env.Debug))
 }
 
 func ValidationEnabled() bool {
-	return isFalseIsh(os.Getenv(_c.EnvVarValidationDisabled))
+	return isFalseIsh(os.Getenv(env.ValidationDisabled))
 }
 
 func VerboseEnabled() bool {
-	return isTrueIsh(os.Getenv(_c.EnvVarMilpaVerbose))
+	return isTrueIsh(os.Getenv(env.Verbose))
+}
+
+func SilenceEnabled() bool {
+	if isTrueIsh(os.Getenv(env.Silent)) {
+		return true
+	}
+	if VerboseEnabled() {
+		return false
+	}
+	for _, arg := range os.Args {
+		if arg == "--silent" {
+			return true
+		}
+	}
+	return false
 }
 
 func ColorEnabled() bool {
-	return isFalseIsh(os.Getenv(_c.EnvVarMilpaUnstyled)) && !UnstyledHelpEnabled()
+	return isFalseIsh(os.Getenv(env.NoColor)) && !UnstyledHelpEnabled()
 }
 
 func UnstyledHelpEnabled() bool {
-	return isTrueIsh(os.Getenv(_c.EnvVarHelpUnstyled))
+	return isTrueIsh(os.Getenv(env.HelpUnstyled))
 }
 
 // EnvironmentMap returns the resolved environment map.
 func EnvironmentMap() map[string]string {
-	env := map[string]string{}
+	res := map[string]string{}
 	trueString := strconv.FormatBool(true)
 
 	if !ColorEnabled() {
-		env[_c.EnvVarMilpaUnstyled] = trueString
-	} else if isTrueIsh(os.Getenv(_c.EnvVarMilpaForceColor)) {
-		env[_c.EnvVarMilpaForceColor] = "always"
+		res[env.NoColor] = trueString
+	} else if isTrueIsh(os.Getenv(env.ForceColor)) {
+		res[env.ForceColor] = "always"
 	}
 
 	if DebugEnabled() {
-		env[_c.EnvVarDebug] = trueString
+		res[env.Debug] = trueString
 	}
 
 	if VerboseEnabled() {
-		env[_c.EnvVarMilpaVerbose] = trueString
-	} else if isTrueIsh(os.Getenv(_c.EnvVarMilpaSilent)) {
-		env[_c.EnvVarMilpaSilent] = trueString
+		res[env.Verbose] = trueString
+	} else if SilenceEnabled() {
+		res[env.Silent] = trueString
 	}
 
-	return env
+	return res
 }

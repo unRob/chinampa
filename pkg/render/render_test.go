@@ -1,15 +1,5 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package render_test
 
 import (
@@ -18,13 +8,13 @@ import (
 	"reflect"
 	"testing"
 
-	_c "git.rob.mx/nidito/chinampa/internal/constants"
-	"git.rob.mx/nidito/chinampa/internal/render"
+	"git.rob.mx/nidito/chinampa/pkg/env"
+	"git.rob.mx/nidito/chinampa/pkg/render"
 )
 
 func TestMarkdownUnstyled(t *testing.T) {
 	content := []byte("# hello")
-	os.Setenv(_c.EnvVarHelpUnstyled, "true")
+	os.Setenv(env.HelpUnstyled, "true")
 	res, err := render.Markdown(content, false)
 
 	if err != nil {
@@ -38,7 +28,7 @@ func TestMarkdownUnstyled(t *testing.T) {
 }
 
 func TestMarkdownNoColor(t *testing.T) {
-	os.Unsetenv(_c.EnvVarHelpUnstyled)
+	os.Unsetenv(env.HelpUnstyled)
 	content := []byte("# hello ﹅world﹅")
 	res, err := render.Markdown(content, false)
 
@@ -61,7 +51,7 @@ var autoStyleTestRender = "\n\x1b[38;5;228;48;5;63;1m\x1b[0m\x1b[38;5;228;48;5;6
 const lightStyleTestRender = "\n\x1b[38;5;228;48;5;63;1m\x1b[0m\x1b[38;5;228;48;5;63;1m\x1b[0m  \x1b[38;5;228;48;5;63;1m \x1b[0m\x1b[38;5;228;48;5;63;1mhello\x1b[0m\x1b[38;5;228;48;5;63;1m \x1b[0m\x1b[38;5;234m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[0m\n\x1b[0m\n"
 
 func TestMarkdownColor(t *testing.T) {
-	os.Unsetenv(_c.EnvVarHelpUnstyled)
+	os.Unsetenv(env.HelpUnstyled)
 	content := []byte("# hello")
 
 	styles := map[string][]byte{
@@ -72,7 +62,7 @@ func TestMarkdownColor(t *testing.T) {
 	}
 	for style, expected := range styles {
 		t.Run(fmt.Sprintf("style %s", style), func(t *testing.T) {
-			os.Setenv(_c.EnvVarHelpStyle, style)
+			os.Setenv(env.HelpStyle, style)
 			res, err := render.Markdown(content, true)
 
 			if err != nil {

@@ -1,15 +1,5 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 package errors
 
 import (
@@ -20,13 +10,14 @@ import (
 	"github.com/spf13/cobra"
 
 	_c "git.rob.mx/nidito/chinampa/internal/constants"
+	"git.rob.mx/nidito/chinampa/pkg/statuscode"
 )
 
 func showHelp(cmd *cobra.Command) {
 	if cmd.Name() != _c.HelpCommandName {
 		err := cmd.Help()
 		if err != nil {
-			os.Exit(_c.ExitStatusProgrammerError)
+			os.Exit(statuscode.ProgrammerError)
 		}
 	}
 }
@@ -35,7 +26,7 @@ func HandleCobraExit(cmd *cobra.Command, err error) {
 	if err == nil {
 		ok, err := cmd.Flags().GetBool(_c.HelpCommandName)
 		if cmd.Name() == _c.HelpCommandName || err == nil && ok {
-			os.Exit(_c.ExitStatusRenderHelp)
+			os.Exit(statuscode.RenderHelp)
 		}
 
 		os.Exit(42)
@@ -48,26 +39,26 @@ func HandleCobraExit(cmd *cobra.Command, err error) {
 	case BadArguments:
 		showHelp(cmd)
 		logrus.Error(err)
-		os.Exit(_c.ExitStatusUsage)
+		os.Exit(statuscode.Usage)
 	case NotFound:
 		showHelp(cmd)
 		logrus.Error(err)
-		os.Exit(_c.ExitStatusNotFound)
+		os.Exit(statuscode.NotFound)
 	case ConfigError:
 		showHelp(cmd)
 		logrus.Error(err)
-		os.Exit(_c.ExitStatusConfigError)
+		os.Exit(statuscode.ConfigError)
 	case EnvironmentError:
 		logrus.Error(err)
-		os.Exit(_c.ExitStatusConfigError)
+		os.Exit(statuscode.ConfigError)
 	default:
 		if strings.HasPrefix(err.Error(), "unknown command") {
 			showHelp(cmd)
-			os.Exit(_c.ExitStatusNotFound)
+			os.Exit(statuscode.NotFound)
 		} else if strings.HasPrefix(err.Error(), "unknown flag") || strings.HasPrefix(err.Error(), "unknown shorthand flag") {
 			showHelp(cmd)
 			logrus.Error(err)
-			os.Exit(_c.ExitStatusUsage)
+			os.Exit(statuscode.Usage)
 		}
 	}
 
