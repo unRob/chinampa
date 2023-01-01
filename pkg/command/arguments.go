@@ -38,6 +38,19 @@ func (args *Arguments) AllKnownStr() map[string]string {
 	return col
 }
 
+func anySliceToStringSlice(src any) []string {
+	res := []string{}
+	switch d := src.(type) {
+	case []string:
+		res = d
+	case []any:
+		for _, valI := range d {
+			res = append(res, valI.(string))
+		}
+	}
+	return res
+}
+
 func (args *Arguments) Parse(supplied []string) {
 	for idx, arg := range *args {
 		argumentProvided := idx < len(supplied)
@@ -45,11 +58,7 @@ func (args *Arguments) Parse(supplied []string) {
 		if !argumentProvided {
 			if arg.Default != nil {
 				if arg.Variadic {
-					defaultSlice := arg.Default.([]string)
-					// defaultSlice := []string{}
-					// for _, valI := range arg.Default.([]string) {
-					// 	defaultSlice = append(defaultSlice, valI.(string))
-					// }
+					defaultSlice := anySliceToStringSlice(arg.Default)
 					arg.provided = &defaultSlice
 				} else {
 					defaultString := arg.Default.(string)
@@ -185,7 +194,7 @@ func (arg *Argument) ToValue() any {
 	} else {
 		if arg.Default != nil {
 			if arg.Variadic {
-				defaultSlice := arg.Default
+				defaultSlice := anySliceToStringSlice(arg.Default)
 				// for _, valI := range arg.Default.([]any) {
 				// 	valStr := valI.(string)
 				// 	defaultSlice = append(defaultSlice, valStr)

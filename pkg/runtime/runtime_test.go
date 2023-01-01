@@ -28,9 +28,9 @@ func TestEnabled(t *testing.T) {
 			Expects: true,
 		},
 		{
-			Name:    env.Verbose,
+			Name:    env.Silent,
 			Func:    SilenceEnabled,
-			Expects: false,
+			Expects: true,
 		},
 		{
 			Name: env.ValidationDisabled,
