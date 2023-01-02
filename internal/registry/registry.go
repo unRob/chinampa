@@ -66,7 +66,7 @@ func Execute(version string) error {
 	ccRoot.Annotations["version"] = version
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
 	ccRoot.PersistentFlags().AddFlagSet(cmdRoot.FlagSet())
-	ccRoot.AddCommand(commands.Help)
+	ccRoot.SetHelpCommand(commands.Help)
 	ccRoot.AddCommand(commands.Version)
 	ccRoot.AddCommand(commands.GenerateCompletions)
 

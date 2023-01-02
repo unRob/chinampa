@@ -83,6 +83,58 @@ func TestEnabled(t *testing.T) {
 	}
 }
 
+func TestSilent(t *testing.T) {
+	origArgs := os.Args
+	t.Cleanup(func() {
+		os.Args = origArgs
+	})
+	t.Run("SILENT = silence", func(t *testing.T) {
+		t.Setenv(env.Silent, "1")
+		t.Setenv(env.Verbose, "")
+		os.Args = []string{}
+		if !SilenceEnabled() {
+			t.Fail()
+		}
+	})
+
+	t.Run("SILENT + VERBOSE = silence", func(t *testing.T) {
+		t.Setenv(env.Silent, "1")
+		t.Setenv(env.Verbose, "1")
+		os.Args = []string{}
+		if SilenceEnabled() {
+			t.Fail()
+		}
+	})
+
+	t.Run("VERBOSE + --silent = silent", func(t *testing.T) {
+		t.Setenv(env.Silent, "")
+		t.Setenv(env.Verbose, "1")
+		os.Args = []string{"some", "random", "--silent", "args"}
+		if !SilenceEnabled() {
+			t.Fail()
+		}
+	})
+
+	t.Run("--silent = silent", func(t *testing.T) {
+		t.Setenv(env.Silent, "")
+		t.Setenv(env.Verbose, "")
+		os.Args = []string{"some", "random", "--silent", "args"}
+		if !SilenceEnabled() {
+			t.Fail()
+		}
+	})
+
+	t.Run("nothing = nothing", func(t *testing.T) {
+		t.Setenv(env.Silent, "")
+		t.Setenv(env.Verbose, "")
+		os.Args = []string{"some", "random", "args"}
+		if SilenceEnabled() {
+			t.Fail()
+		}
+	})
+
+}
+
 func TestEnvironmentMapEnabled(t *testing.T) {
 	trueString := strconv.FormatBool(true)
 	os.Setenv(env.ForceColor, trueString)

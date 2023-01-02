@@ -11,12 +11,3 @@ var NoColor = "NO_COLOR"
 var ForceColor = "COLOR"
 var ValidationDisabled = "SKIP_VALIDATION"
 var Debug = "DEBUG"
-
-// FlagNames are flags also available as environment variables.
-var FlagNames = map[string]string{
-	"no-color":        NoColor,
-	"color":           ForceColor,
-	"silent":          Silent,
-	"verbose":         Verbose,
-	"skip-validation": ValidationDisabled,
-}

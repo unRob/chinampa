@@ -65,18 +65,17 @@ func VerboseEnabled() bool {
 }
 
 func SilenceEnabled() bool {
-	if isTrueIsh(os.Getenv(env.Silent)) {
-		return true
-	}
-	if VerboseEnabled() {
-		return false
-	}
 	for _, arg := range os.Args {
 		if arg == "--silent" {
 			return true
 		}
 	}
-	return false
+
+	if VerboseEnabled() {
+		return false
+	}
+
+	return isTrueIsh(os.Getenv(env.Silent))
 }
 
 func ColorEnabled() bool {
