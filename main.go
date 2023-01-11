@@ -8,8 +8,10 @@ import (
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 )
 
-func Register(cmd *command.Command) {
-	registry.Register(cmd.SetBindings())
+func Register(cmds ...*command.Command) {
+	for _, cmd := range cmds {
+		registry.Register(cmd.SetBindings())
+	}
 }
 
 type Config struct {
