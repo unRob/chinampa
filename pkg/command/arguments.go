@@ -127,7 +127,7 @@ func (args *Arguments) CompletionFunction(cc *cobra.Command, provided []string, 
 			values = cobra.AppendActiveHelp(values, arg.Description)
 		}
 
-		if toComplete != "" {
+		if toComplete != "" && directive != cobra.ShellCompDirectiveFilterFileExt && directive != cobra.ShellCompDirectiveFilterDirs {
 			filtered := []string{}
 			for _, value := range values {
 				if strings.HasPrefix(value, toComplete) {

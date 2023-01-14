@@ -174,7 +174,7 @@ func (opt *Option) CompletionFunction(cmd *cobra.Command, args []string, toCompl
 		return values, cobra.ShellCompDirectiveError
 	}
 
-	if toComplete != "" {
+	if toComplete != "" && flag != cobra.ShellCompDirectiveFilterFileExt && flag != cobra.ShellCompDirectiveFilterDirs {
 		filtered := []string{}
 		for _, value := range values {
 			if strings.HasPrefix(value, toComplete) {
