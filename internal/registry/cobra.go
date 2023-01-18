@@ -27,9 +27,7 @@ func newCobraRoot(root *command.Command) *cobra.Command {
 		SilenceErrors:     true,
 		ValidArgs:         []string{""},
 		Args: func(cmd *cobra.Command, args []string) error {
-			err := cobra.OnlyValidArgs(cmd, args)
-			if err != nil {
-
+			if err := cobra.OnlyValidArgs(cmd, args); err != nil {
 				suggestions := []string{}
 				bold := color.New(color.Bold)
 				for _, l := range cmd.SuggestionsFor(args[len(args)-1]) {

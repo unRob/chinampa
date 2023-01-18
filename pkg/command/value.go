@@ -122,7 +122,6 @@ func (vs *ValueSource) Resolve(currentValue string) (values []string, flag cobra
 			err = ctx.Err()
 			return
 		}
-
 	case vs.Command != nil:
 		if vs.command == nil {
 			return nil, cobra.ShellCompDirectiveError, fmt.Errorf("bug: command is nil")
@@ -168,7 +167,7 @@ func (vs *ValueSource) Resolve(currentValue string) (values []string, flag cobra
 			return nil, flag, err
 		}
 	default:
-		return nil, flag, fmt.Errorf("Empty value source")
+		return nil, flag, fmt.Errorf("empty value source")
 	}
 
 	vs.computed = &values
@@ -242,7 +241,6 @@ func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
 	}
 
 	if t, ok := intermediate["timeout"]; ok {
-
 		if err := t.Decode(&vs.Timeout); err != nil {
 			logrus.Errorf("could not decode timeout: %s", err)
 			return err

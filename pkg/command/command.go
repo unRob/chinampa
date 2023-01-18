@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"git.rob.mx/nidito/chinampa/pkg/errors"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -145,11 +144,7 @@ func (cmd *Command) Run(cc *cobra.Command, args []string) error {
 		return err
 	}
 
-	err := cmd.Action(cmd)
-	if err != nil {
-		errors.HandleCobraExit(cmd.Cobra, err)
-	}
-	return err
+	return cmd.Action(cmd)
 }
 
 func (cmd *Command) SetCobra(cc *cobra.Command) {

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package env
 
-// Environment Variables.
 var HelpUnstyled = "HELP_STYLE_PLAIN"
 var HelpStyle = "HELP_STYLE"
 var Verbose = "VERBOSE"

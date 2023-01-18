@@ -132,7 +132,6 @@ func TestSilent(t *testing.T) {
 			t.Fail()
 		}
 	})
-
 }
 
 func TestEnvironmentMapEnabled(t *testing.T) {

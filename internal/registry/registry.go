@@ -20,6 +20,8 @@ import (
 // ContextKeyRuntimeIndex is the string key used to store context in a cobra Command.
 const ContextKeyRuntimeIndex = "x-chinampa-runtime-index"
 
+var ErrorHandler = errors.HandleCobraExit
+
 var log = logrus.WithField("chinampa", "registry")
 
 var registry = &CommandRegistry{
@@ -66,7 +68,6 @@ func Execute(version string) error {
 	ccRoot.Annotations["version"] = version
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
 	ccRoot.PersistentFlags().AddFlagSet(cmdRoot.FlagSet())
-	ccRoot.SetHelpCommand(commands.Help)
 	ccRoot.AddCommand(commands.Version)
 	ccRoot.AddCommand(commands.GenerateCompletions)
 
@@ -91,6 +92,11 @@ func Execute(version string) error {
 
 			query := []string{cp}
 			found := false
+			if len(query) == 1 && query[0] == "help" {
+				container = commands.Help
+				continue
+			}
+
 			for _, sub := range container.Commands() {
 				if sub.Name() == cp {
 					container = sub
@@ -132,6 +138,9 @@ func Execute(version string) error {
 					ValidArgs: []string{""},
 					RunE: func(cc *cobra.Command, args []string) error {
 						if len(args) == 0 {
+							if cc.Name() == "help" {
+								return cc.Help()
+							}
 							return errors.NotFound{Msg: "No subcommand provided", Group: []string{}}
 						}
 						os.Exit(statuscode.NotFound)
@@ -157,6 +166,7 @@ func Execute(version string) error {
 		cmd.Path = append(cmdRoot.Path, cmd.Path...)
 	}
 	cmdRoot.SetCobra(ccRoot)
+	ccRoot.SetHelpCommand(commands.Help)
 
 	current, remaining, err := ccRoot.Find(os.Args[1:])
 	if err != nil {
@@ -169,11 +179,6 @@ func Execute(version string) error {
 		current = sub
 	}
 	log.Debugf("exec: calling %s", current.CommandPath())
-	err = current.Execute()
-	if err != nil {
-		log.Debugf("exec: error calling %s, %s", current.CommandPath(), err)
-		errors.HandleCobraExit(current, err)
-	}
 
-	return err
+	return ErrorHandler(current, current.Execute())
 }

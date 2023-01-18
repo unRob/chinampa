@@ -6,6 +6,7 @@ import (
 	"git.rob.mx/nidito/chinampa/internal/registry"
 	"git.rob.mx/nidito/chinampa/pkg/command"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
+	"github.com/spf13/cobra"
 )
 
 func Register(cmds ...*command.Command) {
@@ -19,6 +20,10 @@ type Config struct {
 	Version     string
 	Summary     string
 	Description string
+}
+
+func SetErrorHandler(handlerFunc func(cmd *cobra.Command, err error) error) {
+	registry.ErrorHandler = handlerFunc
 }
 
 func Execute(config Config) error {

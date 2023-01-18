@@ -22,20 +22,17 @@ func showHelp(cmd *cobra.Command) {
 	}
 }
 
-func HandleCobraExit(cmd *cobra.Command, err error) {
+func HandleCobraExit(cmd *cobra.Command, err error) error {
 	if err == nil {
-		ok, err := cmd.Flags().GetBool(_c.HelpCommandName)
+		ok, err := cmd.PersistentFlags().GetBool(_c.HelpCommandName)
 		if cmd.Name() == _c.HelpCommandName || err == nil && ok {
 			os.Exit(statuscode.RenderHelp)
 		}
 
-		os.Exit(42)
+		os.Exit(statuscode.Ok)
 	}
 
-	switch tErr := err.(type) {
-	case SubCommandExit:
-		logrus.Debugf("Sub-command failed with: %s", err.Error())
-		os.Exit(tErr.ExitCode)
+	switch err.(type) {
 	case BadArguments:
 		showHelp(cmd)
 		logrus.Error(err)
@@ -44,13 +41,6 @@ func HandleCobraExit(cmd *cobra.Command, err error) {
 		showHelp(cmd)
 		logrus.Error(err)
 		os.Exit(statuscode.NotFound)
-	case ConfigError:
-		showHelp(cmd)
-		logrus.Error(err)
-		os.Exit(statuscode.ConfigError)
-	case EnvironmentError:
-		logrus.Error(err)
-		os.Exit(statuscode.ConfigError)
 	default:
 		if strings.HasPrefix(err.Error(), "unknown command") {
 			showHelp(cmd)
@@ -64,4 +54,5 @@ func HandleCobraExit(cmd *cobra.Command, err error) {
 
 	logrus.Errorf("Unknown error: %s", err)
 	os.Exit(2)
+	return err
 }
