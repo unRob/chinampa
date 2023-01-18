@@ -7,7 +7,7 @@ package main
 
 import (
 	"os"
-  "fmt",
+	"fmt"
 
 	"git.rob.mx/nidito/chinampa"
 	"git.rob.mx/nidito/chinampa/pkg/command"
@@ -18,22 +18,22 @@ import (
 
 func main() {
 	chinampa.Register(&command.Command{
-    Path:        []string{"something"},
-    Summary:     "does something",
-    Description: "a longer description of how it does stuff",
-    Arguments: command.Arguments{
-      {
-        Name:        "argument zero",
-        Description: "a help text for using argument zero",
-        Required:    true,
-      },
-    },
-    Action: func(cmd *command.Command) error {
-      someArg := cmd.Arguments[0].ToValue().(string)
+		Path:        []string{"something"},
+		Summary:     "does something",
+		Description: "a longer description of how it does stuff",
+		Arguments: command.Arguments{
+			{
+				Name:        "argument zero",
+				Description: "a help text for using argument zero",
+				Required:    true,
+			},
+		},
+		Action: func(cmd *command.Command) error {
+			someArg := cmd.Arguments[0].ToValue().(string)
 
-      return fmt.Errorf("Don't know how to do stuff with %s", someArg)
-    },
-  })
+			return fmt.Errorf("Don't know how to do stuff with %s", someArg)
+		},
+	})
 
 	logrus.SetFormatter(&logrus.TextFormatter{
 		DisableLevelTruncation: true,
