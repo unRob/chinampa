@@ -73,6 +73,7 @@ var TemplateFuncs = template.FuncMap{
 	"trim":       strings.TrimSpace,
 	"trimSuffix": strings.TrimSuffix,
 	"trimPrefix": strings.TrimPrefix,
+	"list":       func(args ...any) []any { return args },
 }
 
 // TemplateCommandHelp holds a template for rendering command help.

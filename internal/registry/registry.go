@@ -65,10 +65,15 @@ func Execute(version string) error {
 	log.Debug("starting execution")
 	cmdRoot := command.Root
 	ccRoot := newCobraRoot(command.Root)
-	ccRoot.Annotations["version"] = version
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
 	ccRoot.PersistentFlags().AddFlagSet(cmdRoot.FlagSet())
-	ccRoot.AddCommand(commands.Version)
+	if version != "" {
+		name := commands.VersionCommandName
+		ccRoot.Annotations["version"] = version
+		commands.Version.Hidden = strings.HasPrefix(name, "_")
+		commands.Version.Use = name
+		ccRoot.AddCommand(commands.Version)
+	}
 	ccRoot.AddCommand(commands.GenerateCompletions)
 
 	for name, opt := range cmdRoot.Options {

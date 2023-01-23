@@ -3,6 +3,7 @@
 package chinampa
 
 import (
+	"git.rob.mx/nidito/chinampa/internal/commands"
 	"git.rob.mx/nidito/chinampa/internal/registry"
 	"git.rob.mx/nidito/chinampa/pkg/command"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
@@ -20,6 +21,10 @@ type Config struct {
 	Version     string
 	Summary     string
 	Description string
+}
+
+func SetVersionCommandName(name string) {
+	commands.VersionCommandName = name
 }
 
 func SetErrorHandler(handlerFunc func(cmd *cobra.Command, err error) error) {

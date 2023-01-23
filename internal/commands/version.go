@@ -10,8 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var VersionCommandName = "version"
 var Version = &cobra.Command{
-	Use:               "version",
+	Use:               VersionCommandName,
 	Short:             "Display program version",
 	Hidden:            false,
 	DisableAutoGenTag: true,

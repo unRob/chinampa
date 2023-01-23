@@ -35,7 +35,7 @@ description: {{ .Command.Short }}
 {{ range .Command.Commands -}}
 {{- if (or .IsAvailableCommand (eq .Name "help")) -}}
 - {{ if $hh -}}
-[`{{ .Name }}`]({{.Name}})
+[`{{ .Name }}`]({{.Name}}/)
 {{- else -}}
 `{{ .Name }}`
 {{- end }} - {{.Short}}
