@@ -312,6 +312,7 @@ func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
 
 var customCompleters = map[string]CompletionFunc{}
 
+// Registers a completion function for the given command.ValueType key name
 func RegisterValueSource(key string, completion CompletionFunc) {
 	customCompleters[key] = completion
 }

@@ -95,6 +95,12 @@ func (args *Arguments) CompletionFunction(cc *cobra.Command, provided []string, 
 	values := []string{}
 	directive := cobra.ShellCompDirectiveError
 
+	if cc.HasAvailableSubCommands() && len(provided) < 1 {
+		// if this is an "index" command and user is providing first argument
+		// allow completions instead of erroring by default
+		directive = cobra.ShellCompDirectiveDefault
+	}
+
 	if expectedArgLen > 0 {
 		argsCompleted := len(provided)
 		lastArg := (*args)[len(*args)-1]
