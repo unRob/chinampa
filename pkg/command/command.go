@@ -17,7 +17,7 @@ type HelpFunc func(printLinks bool) string
 type Action func(cmd *Command) error
 
 type Command struct {
-	Path []string
+	Path []string `json:"path" yaml:"path"`
 	// Summary is a short description of a command, on supported shells this is part of the autocomplete prompt
 	Summary string `json:"summary" yaml:"summary" validate:"required"`
 	// Description is a long form explanation of how a command works its magic. Markdown is supported
