@@ -140,7 +140,6 @@ func Execute(version string) error {
 						}
 						return errors.NotFound{Msg: errMessage, Group: []string{}}
 					},
-					ValidArgs: []string{""},
 					RunE: func(cc *cobra.Command, args []string) error {
 						if len(args) == 0 {
 							if cc.Name() == "help" {
