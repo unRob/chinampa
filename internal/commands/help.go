@@ -15,6 +15,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func cobraCommandFullName(c *cobra.Command) []string {
+	name := []string{c.Name()}
+	if c.HasParent() {
+		name = append(cobraCommandFullName(c.Parent()), name...)
+	}
+	return name
+}
+
 var Help = &cobra.Command{
 	Use:   _c.HelpCommandName + " [command]",
 	Short: "Display usage information for any command",
@@ -39,34 +47,31 @@ var Help = &cobra.Command{
 		return completions, cobra.ShellCompDirectiveNoFileComp
 	},
 	Run: func(c *cobra.Command, args []string) {
-		cmd, _, e := c.Root().Find(args)
-		if cmd == nil || e != nil || (len(args) > 0 && cmd != nil && cmd.Name() != args[len(args)-1]) {
-			if cmd == nil {
-				err := c.Root().Help()
-				if err != nil {
-					logrus.Error(err)
-					os.Exit(statuscode.ProgrammerError)
-				}
-				logrus.Errorf("Unknown help topic %s", args)
-				os.Exit(statuscode.NotFound)
-			} else {
-				err := cmd.Help()
-
-				if err != nil {
-					logrus.Error(err)
-					os.Exit(statuscode.ProgrammerError)
-				}
-
-				if len(args) > 1 {
-					logrus.Errorf("Unknown help topic %s for %s", args[1], args[0])
-				} else {
-					logrus.Errorf("Unknown help topic %s for %s", runtime.Executable, args[0])
-				}
-				os.Exit(statuscode.NotFound)
+		if len(args) > 0 && c != nil && c.Name() != args[len(args)-1] {
+			c, topicArgs, err := c.Root().Find(args)
+			if err == nil && c != nil && len(topicArgs) == 0 {
+				// exact command help
+				cobra.CheckErr(c.Help())
+				os.Exit(statuscode.RenderHelp)
+				return
 			}
+
+			if err != nil {
+				logrus.Error(err)
+				os.Exit(statuscode.ProgrammerError)
+			}
+
+			fullName := strings.Join(cobraCommandFullName(c), " ")
+			cobra.CheckErr(c.Help())
+			if len(topicArgs) > 0 {
+				logrus.Errorf("Unknown help topic \"%s\" for %s", topicArgs[0], fullName)
+			} else {
+				logrus.Errorf("Unknown help topic \"%s\"", args[0])
+			}
+			os.Exit(statuscode.NotFound)
 		} else {
-			cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
-			cobra.CheckErr(cmd.Help())
+			c.InitDefaultHelpFlag() // make possible 'help' flag to be shown
+			cobra.CheckErr(c.Help())
 		}
 
 		os.Exit(statuscode.RenderHelp)

@@ -40,7 +40,7 @@ type CommandRegistry struct {
 }
 
 func Register(cmd *command.Command) {
-	log.Debugf("adding to registry: %s", cmd.FullName())
+	log.Tracef("adding to registry: %s", cmd.FullName())
 	registry.kv[cmd.FullName()] = cmd
 }
 
@@ -91,7 +91,7 @@ func Execute(version string) error {
 			if idx == len(cmd.Path)-1 {
 				leaf := ToCobra(cmd, cmdRoot.Options)
 				container.AddCommand(leaf)
-				log.Debugf("cobra: %s => %s", leaf.Name(), container.CommandPath())
+				log.Tracef("cobra: %s => %s", leaf.Name(), container.CommandPath())
 				break
 			}
 
