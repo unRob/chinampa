@@ -5,8 +5,8 @@ package commands
 import (
 	"os"
 
+	"git.rob.mx/nidito/chinampa/pkg/logger"
 	"git.rob.mx/nidito/chinampa/pkg/statuscode"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +28,7 @@ var Version = &cobra.Command{
 
 		_, err := output.Write([]byte(version))
 		if err != nil {
-			logrus.Errorf("version error: %s", err)
+			logger.Main.Errorf("version error: %s", err)
 			return err
 		}
 

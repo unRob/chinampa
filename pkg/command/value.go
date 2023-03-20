@@ -13,7 +13,6 @@ import (
 
 	"git.rob.mx/nidito/chinampa/pkg/exec"
 	"git.rob.mx/nidito/chinampa/pkg/render"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -162,7 +161,7 @@ func (vs *ValueSource) Resolve(currentValue string) (values []string, flag cobra
 
 		args := append([]string{"/bin/bash", "-c"}, cmd)
 
-		values, flag, err = exec.Exec(vs.command.FullName(), args, os.Environ(), timeout*time.Second)
+		values, flag, err = exec.Exec(vs.command.FullName(), args, os.Environ(), timeout*time.Second, log)
 		if err != nil {
 			return nil, flag, err
 		}
@@ -236,13 +235,13 @@ func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
 	vs.computed = nil
 	intermediate := map[string]yaml.Node{}
 	if err := node.Decode(&intermediate); err != nil {
-		logrus.Errorf("could not decode valuesource: %s", err)
+		log.Errorf("could not decode valuesource: %s", err)
 		return err
 	}
 
 	if t, ok := intermediate["timeout"]; ok {
 		if err := t.Decode(&vs.Timeout); err != nil {
-			logrus.Errorf("could not decode timeout: %s", err)
+			log.Errorf("could not decode timeout: %s", err)
 			return err
 		}
 		delete(intermediate, "timeout")
@@ -250,7 +249,7 @@ func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
 
 	if t, ok := intermediate["suggest-only"]; ok {
 		if err := t.Decode(&vs.Suggestion); err != nil {
-			logrus.Errorf("could not decode suggest-only: %s", err)
+			log.Errorf("could not decode suggest-only: %s", err)
 			return err
 		}
 		delete(intermediate, "suggest-only")
@@ -258,7 +257,7 @@ func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
 
 	if t, ok := intermediate["suggest-raw"]; ok {
 		if err := t.Decode(&vs.SuggestRaw); err != nil {
-			logrus.Errorf("could not decode suggest-raw: %s", err)
+			log.Errorf("could not decode suggest-raw: %s", err)
 			return err
 		}
 		delete(intermediate, "suggest-raw")
@@ -267,7 +266,7 @@ func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
 	for key, node := range intermediate {
 		if cfn, ok := customCompleters[key]; ok {
 			if err := node.Decode(&vs.custom); err != nil {
-				logrus.Errorf("could not decode custom: %s", err)
+				log.Errorf("could not decode custom: %s", err)
 				return err
 			}
 			vs.Func = cfn
@@ -294,7 +293,7 @@ func (vs *ValueSource) UnmarshalYAML(node *yaml.Node) error {
 		case "static":
 			static := []string{}
 			if err := node.Decode(&static); err != nil {
-				logrus.Errorf("could not decode static: %s", err)
+				log.Errorf("could not decode static: %s", err)
 				return err
 			}
 			vs.Static = &static

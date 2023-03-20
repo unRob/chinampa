@@ -61,6 +61,11 @@ func ValidationEnabled() bool {
 }
 
 func VerboseEnabled() bool {
+	for _, arg := range os.Args {
+		if arg == "--verbose" {
+			return true
+		}
+	}
 	return isTrueIsh(os.Getenv(env.Verbose))
 }
 

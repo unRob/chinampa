@@ -11,9 +11,9 @@ import (
 	"git.rob.mx/nidito/chinampa/internal/commands"
 	"git.rob.mx/nidito/chinampa/pkg/command"
 	"git.rob.mx/nidito/chinampa/pkg/errors"
+	"git.rob.mx/nidito/chinampa/pkg/logger"
 	"git.rob.mx/nidito/chinampa/pkg/statuscode"
 	"github.com/fatih/color"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ const ContextKeyRuntimeIndex = "x-chinampa-runtime-index"
 
 var ErrorHandler = errors.HandleCobraExit
 
-var log = logrus.WithField("chinampa", "registry")
+var log = logger.Sub("registry")
 
 var registry = &CommandRegistry{
 	kv: map[string]*command.Command{},
@@ -91,6 +91,7 @@ func Execute(version string) error {
 			if idx == len(cmd.Path)-1 {
 				leaf := ToCobra(cmd, cmdRoot.Options)
 				container.AddCommand(leaf)
+				container.ValidArgs = append(container.ValidArgs, leaf.Name())
 				log.Tracef("cobra: %s => %s", leaf.Name(), container.CommandPath())
 				break
 			}
@@ -122,6 +123,7 @@ func Execute(version string) error {
 					Annotations: map[string]string{
 						ContextKeyRuntimeIndex: strings.Join(groupPath, " "),
 					},
+					ValidArgs: []string{},
 					Args: func(cmd *cobra.Command, args []string) error {
 						if err := cobra.OnlyValidArgs(cmd, args); err == nil {
 							return nil

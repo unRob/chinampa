@@ -32,7 +32,7 @@ func (opts *Options) AllKnownStr() map[string]string {
 }
 
 func (opts *Options) Parse(supplied *pflag.FlagSet) {
-	// logrus.Debugf("Parsing supplied flags, %v", supplied)
+	// log.Debugf("Parsing supplied flags, %v", supplied)
 	for name, opt := range *opts {
 		switch opt.Type {
 		case ValueTypeBoolean:

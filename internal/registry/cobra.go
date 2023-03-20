@@ -10,7 +10,6 @@ import (
 	"git.rob.mx/nidito/chinampa/pkg/errors"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/fatih/color"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -92,7 +91,7 @@ func ToCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command
 
 	for name, opt := range cmd.Options {
 		if err := cc.RegisterFlagCompletionFunc(name, opt.CompletionFunction); err != nil {
-			logrus.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmd.FullName())
+			log.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmd.FullName())
 		}
 	}
 

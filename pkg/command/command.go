@@ -7,11 +7,13 @@ import (
 	"strconv"
 	"strings"
 
+	"git.rob.mx/nidito/chinampa/pkg/logger"
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
+
+var log = logger.Sub("chinampa:command")
 
 type HelpFunc func(printLinks bool) string
 type Action func(cmd *Command) error
@@ -90,7 +92,7 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 					case string:
 						casted, err := strconv.Atoi(val)
 						if err != nil {
-							logrus.Warnf("Could not parse default with value <%s> as integer for option <%s>", val, name)
+							log.Warnf("Could not parse default with value <%s> as integer for option <%s>", val, name)
 						}
 						def = casted
 					}
@@ -106,7 +108,7 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 				fs.StringP(name, opt.ShortName, def, opt.Description)
 			default:
 				// ignore flag
-				logrus.Warnf("Ignoring unknown option type <%s> for option <%s>", opt.Type, name)
+				log.Warnf("Ignoring unknown option type <%s> for option <%s>", opt.Type, name)
 				continue
 			}
 		}
@@ -121,14 +123,14 @@ func (cmd *Command) ParseInput(cc *cobra.Command, args []string) error {
 	skipValidation, _ := cc.Flags().GetBool("skip-validation")
 	cmd.Options.Parse(cc.Flags())
 	if !skipValidation {
-		logrus.Debug("Validating arguments")
+		log.Debug("Validating arguments")
 		if err := cmd.Arguments.AreValid(); err != nil {
 			return err
 		}
 
-		logrus.Debug("Validating flags")
+		log.Debug("Validating flags")
 		if err := cmd.Options.AreValid(); err != nil {
-			logrus.Debugf("Invalid flags for %s: %s", cmd.FullName(), err)
+			log.Debugf("Invalid flags for %s: %s", cmd.FullName(), err)
 			return err
 		}
 	}
@@ -137,10 +139,10 @@ func (cmd *Command) ParseInput(cc *cobra.Command, args []string) error {
 }
 
 func (cmd *Command) Run(cc *cobra.Command, args []string) error {
-	logrus.Debugf("running command %s", cmd.FullName())
+	log.Debugf("running command %s", cmd.FullName())
 
 	if err := cmd.ParseInput(cc, args); err != nil {
-		logrus.Debugf("Parsing input to command %s failed: %s", cmd.FullName(), err)
+		log.Debugf("Parsing input to command %s failed: %s", cmd.FullName(), err)
 		return err
 	}
 
