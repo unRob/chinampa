@@ -12,7 +12,7 @@ import (
 var componentKey = "_component"
 
 func init() {
-	logrus.SetFormatter(new(Formatter))
+	logrus.SetFormatter(new(ttyFormatter))
 }
 
 var Main = logrus.WithContext(context.Background())
@@ -21,18 +21,23 @@ func Sub(name string) *logrus.Entry {
 	return logrus.WithField(componentKey, name)
 }
 
+// Level is a log entry severity level.
 type Level int
 
 const (
-	LevelPanic Level = iota
-	LevelFatal
-	LevelError
+	// LevelError is the most severe.
+	LevelError Level = iota + 2
+	// LevelWarning happens when something is potentially off.
 	LevelWarning
+	// LevelInfo is regular information relayed back to the user.
 	LevelInfo
+	// LevelDebug is debugging information.
 	LevelDebug
+	// LevelTrace is verbose debugging information.
 	LevelTrace
 )
 
+// Configure sets up the Main logger.
 func Configure(name string, level Level) {
 	Main = logrus.WithField(componentKey, name)
 	if runtime.SilenceEnabled() {

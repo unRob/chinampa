@@ -18,6 +18,7 @@ import (
 // ExecFunc is replaced in tests.
 var ExecFunc = WithSubshell
 
+// WithSubshell is the default runner of subprocesses.
 func WithSubshell(ctx context.Context, env []string, executable string, args ...string) (bytes.Buffer, bytes.Buffer, error) {
 	cmd := os_exec.CommandContext(ctx, executable, args...) // #nosec G204
 	var stdout bytes.Buffer

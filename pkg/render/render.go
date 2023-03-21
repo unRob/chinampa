@@ -20,6 +20,7 @@ func addBackticks(str []byte) []byte {
 	return bytes.ReplaceAll(str, []byte("﹅"), []byte("`"))
 }
 
+// Markdown renders markdown-formatted content to the tty.
 func Markdown(content []byte, withColor bool) ([]byte, error) {
 	content = addBackticks(content)
 

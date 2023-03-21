@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package errors
 
+// NotFound happens when a sub-command was not found.
 type NotFound struct {
 	Msg   string
 	Group []string
 }
 
+// BadArguments happens when the user provided incorrect arguments or options.
 type BadArguments struct {
 	Msg string
 }

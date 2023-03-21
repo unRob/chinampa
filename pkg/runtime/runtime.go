@@ -1,5 +1,9 @@
 // Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+Package runtime presents environment related information useful during your program's runtime.
+*/
 package runtime
 
 import (
@@ -9,6 +13,8 @@ import (
 	"git.rob.mx/nidito/chinampa/pkg/env"
 )
 
+// Executable is the name of our binary, and should be set
+// using `chinampa.Execute(config chinampa.Config)`.
 var Executable = "chinampa"
 
 var falseIshValues = []string{
@@ -54,7 +60,8 @@ func isTrueIsh(val string) bool {
 
 var _flags map[string]bool
 
-func ResetParsedFlags() {
+// ResetParsedFlagsCache resets the cached parsed global flags.
+func ResetParsedFlagsCache() {
 	_flags = nil
 }
 
@@ -85,14 +92,17 @@ func flagInArgs(name string) bool {
 	return ok
 }
 
+// DebugEnabled tells if debugging was requested.
 func DebugEnabled() bool {
 	return isTrueIsh(os.Getenv(env.Debug))
 }
 
+// DebugEnabled tells if debugging was requested.
 func ValidationEnabled() bool {
 	return !flagInArgs("skip-validation") && isFalseIsh(os.Getenv(env.ValidationDisabled))
 }
 
+// VerboseEnabled tells if verbose output was requested.
 func VerboseEnabled() bool {
 	if flagInArgs("silent") {
 		return false
@@ -100,6 +110,7 @@ func VerboseEnabled() bool {
 	return isTrueIsh(os.Getenv(env.Verbose)) || flagInArgs("verbose")
 }
 
+// SilenceEnabled tells if silencing of output was requested.
 func SilenceEnabled() bool {
 	if flagInArgs("verbose") {
 		return false
@@ -111,6 +122,7 @@ func SilenceEnabled() bool {
 	return isTrueIsh(os.Getenv(env.Silent)) || flagInArgs("silent")
 }
 
+// ColorEnabled tells if colorizing output was requested.
 func ColorEnabled() bool {
 	if flagInArgs("color") {
 		return true
@@ -120,11 +132,12 @@ func ColorEnabled() bool {
 	return !(isTrueIsh(os.Getenv(env.NoColor)) || UnstyledHelpEnabled() || flagInArgs("no-color"))
 }
 
+// UnstyledHelpEnabled tells if help should be printed without formatting.
 func UnstyledHelpEnabled() bool {
 	return isTrueIsh(os.Getenv(env.HelpUnstyled))
 }
 
-// EnvironmentMap returns the resolved environment map.
+// EnvironmentMap returns a map of environment keys for color, debugging and verbosity and their values, ready for `os.Setenv`.
 func EnvironmentMap() map[string]string {
 	res := map[string]string{}
 	trueString := strconv.FormatBool(true)

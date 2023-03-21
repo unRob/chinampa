@@ -12,7 +12,6 @@ import (
 	"git.rob.mx/nidito/chinampa/pkg/command"
 	"git.rob.mx/nidito/chinampa/pkg/errors"
 	"git.rob.mx/nidito/chinampa/pkg/logger"
-	"git.rob.mx/nidito/chinampa/pkg/statuscode"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -91,9 +90,6 @@ func Execute(version string) error {
 			if idx == len(cmd.Path)-1 {
 				leaf := ToCobra(cmd, cmdRoot.Options)
 				container.AddCommand(leaf)
-				if container != ccRoot {
-					container.ValidArgs = append(container.ValidArgs, leaf.Name())
-				}
 				log.Tracef("cobra: %s => %s", leaf.Name(), container.CommandPath())
 				break
 			}
@@ -151,8 +147,8 @@ func Execute(version string) error {
 							}
 							return errors.NotFound{Msg: "No subcommand provided", Group: []string{}}
 						}
-						os.Exit(statuscode.NotFound)
-						return nil
+
+						return errors.NotFound{Msg: fmt.Sprintf("Unknown subcommand %s", args[0]), Group: []string{}}
 					},
 				}
 

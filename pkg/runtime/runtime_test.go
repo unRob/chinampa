@@ -27,7 +27,7 @@ func withEnv(t *testing.T, env map[string]string) {
 	}
 
 	t.Cleanup(func() {
-		ResetParsedFlags()
+		ResetParsedFlagsCache()
 
 		for k := range env {
 			os.Unsetenv(k)

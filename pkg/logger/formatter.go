@@ -33,10 +33,10 @@ func init() {
 	dimmed.EnableColor()
 }
 
-type Formatter struct {
+type ttyFormatter struct {
 }
 
-func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (f *ttyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	prefix := ""
 	colorEnabled := runtime.ColorEnabled()
 	message := entry.Message
