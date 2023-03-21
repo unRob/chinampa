@@ -119,7 +119,9 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 }
 
 func (cmd *Command) ParseInput(cc *cobra.Command, args []string) error {
-	cmd.Arguments.Parse(args)
+	if err := cmd.Arguments.Parse(args); err != nil {
+		return err
+	}
 	skipValidation, _ := cc.Flags().GetBool("skip-validation")
 	cmd.Options.Parse(cc.Flags())
 	if !skipValidation {

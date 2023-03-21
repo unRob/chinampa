@@ -24,7 +24,8 @@ func newCobraRoot(root *command.Command) *cobra.Command {
 		DisableAutoGenTag: true,
 		SilenceUsage:      true,
 		SilenceErrors:     true,
-		ValidArgs:         []string{""},
+		// This tricks cobra into erroring without a subcommand
+		ValidArgs: []string{""},
 		Args: func(cmd *cobra.Command, args []string) error {
 			if err := cobra.OnlyValidArgs(cmd, args); err != nil {
 				suggestions := []string{}
@@ -73,7 +74,9 @@ func ToCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command
 		Args: func(cc *cobra.Command, supplied []string) error {
 			skipValidation, _ := cc.Flags().GetBool("skip-validation")
 			if !skipValidation && runtime.ValidationEnabled() {
-				cmd.Arguments.Parse(supplied)
+				if err := cmd.Arguments.Parse(supplied); err != nil {
+					return err
+				}
 				return cmd.Arguments.AreValid()
 			}
 			return nil

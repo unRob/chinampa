@@ -52,39 +52,72 @@ func isTrueIsh(val string) bool {
 	return false
 }
 
+var _flags map[string]bool
+
+func ResetParsedFlags() {
+	_flags = nil
+}
+
+func flagInArgs(name string) bool {
+	if _flags == nil {
+		_flags = map[string]bool{}
+		for _, arg := range os.Args {
+			switch arg {
+			case "--verbose":
+				_flags["verbose"] = true
+				delete(_flags, "silent")
+			case "--silent":
+				_flags["silent"] = true
+				delete(_flags, "verbose")
+			case "--color":
+				_flags["color"] = true
+				delete(_flags, "no-color")
+			case "--no-color":
+				_flags["no-color"] = true
+				delete(_flags, "color")
+			case "--skip-validation":
+				_flags["skip-validation"] = true
+			}
+		}
+	}
+
+	_, ok := _flags[name]
+	return ok
+}
+
 func DebugEnabled() bool {
 	return isTrueIsh(os.Getenv(env.Debug))
 }
 
 func ValidationEnabled() bool {
-	return isFalseIsh(os.Getenv(env.ValidationDisabled))
+	return !flagInArgs("skip-validation") && isFalseIsh(os.Getenv(env.ValidationDisabled))
 }
 
 func VerboseEnabled() bool {
-	for _, arg := range os.Args {
-		if arg == "--verbose" {
-			return true
-		}
+	if flagInArgs("silent") {
+		return false
 	}
-	return isTrueIsh(os.Getenv(env.Verbose))
+	return isTrueIsh(os.Getenv(env.Verbose)) || flagInArgs("verbose")
 }
 
 func SilenceEnabled() bool {
-	for _, arg := range os.Args {
-		if arg == "--silent" {
-			return true
-		}
-	}
-
-	if VerboseEnabled() {
+	if flagInArgs("verbose") {
 		return false
 	}
+	if flagInArgs("silent") {
+		return true
+	}
 
-	return isTrueIsh(os.Getenv(env.Silent))
+	return isTrueIsh(os.Getenv(env.Silent)) || flagInArgs("silent")
 }
 
 func ColorEnabled() bool {
-	return isFalseIsh(os.Getenv(env.NoColor)) && !UnstyledHelpEnabled()
+	if flagInArgs("color") {
+		return true
+	}
+
+	// we're talking to ttys, we want color unless NO_COLOR/--no-color
+	return !(isTrueIsh(os.Getenv(env.NoColor)) || UnstyledHelpEnabled() || flagInArgs("no-color"))
 }
 
 func UnstyledHelpEnabled() bool {

@@ -51,7 +51,8 @@ func anySliceToStringSlice(src any) []string {
 	return res
 }
 
-func (args *Arguments) Parse(supplied []string) {
+func (args *Arguments) Parse(supplied []string) error {
+	parsed := []string{}
 	for idx, arg := range *args {
 		argumentProvided := idx < len(supplied)
 
@@ -76,7 +77,13 @@ func (args *Arguments) Parse(supplied []string) {
 		} else {
 			arg.SetValue([]string{supplied[idx]})
 		}
+		parsed = append(parsed, *arg.provided...)
 	}
+
+	if len(parsed) != len(supplied) {
+		return errors.BadArguments{Msg: fmt.Sprintf("Unexpected arguments provided: %s", supplied)}
+	}
+	return nil
 }
 
 func (args *Arguments) AreValid() error {
@@ -106,7 +113,9 @@ func (args *Arguments) CompletionFunction(cc *cobra.Command, provided []string, 
 		lastArg := (*args)[len(*args)-1]
 		hasVariadicArg := expectedArgLen > 0 && lastArg.Variadic
 		lastArg.Command.Options.Parse(cc.Flags())
-		args.Parse(provided)
+		if err := args.Parse(provided); err != nil {
+			return []string{err.Error()}, cobra.ShellCompDirectiveDefault
+		}
 
 		directive = cobra.ShellCompDirectiveDefault
 		if argsCompleted < expectedArgLen || hasVariadicArg {

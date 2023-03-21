@@ -1,0 +1,15 @@
+summary: Creates a new tag and updates the changelog
+description: |
+  Automation might trigger a release if github is in a good mood
+arguments:
+  - name: increment
+    description: "The kind of semver increment"
+    default: patch
+    values:
+      static: [major, minor, patch]
+    required: true
+options:
+  pre:
+    values:
+      static: [alpha, beta, rc]
+    description: create a pre-release

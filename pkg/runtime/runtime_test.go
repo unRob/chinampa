@@ -8,15 +8,146 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 
 	"git.rob.mx/nidito/chinampa/pkg/env"
 	. "git.rob.mx/nidito/chinampa/pkg/runtime"
 )
 
-func TestEnabled(t *testing.T) {
-	defer func() { os.Setenv(env.Verbose, "") }()
+func withEnv(t *testing.T, env map[string]string) {
+	prevEnv := os.Environ()
+	for _, entry := range prevEnv {
+		parts := strings.SplitN(entry, "=", 2)
+		os.Unsetenv(parts[0])
+	}
 
+	for k, v := range env {
+		os.Setenv(k, v)
+	}
+
+	t.Cleanup(func() {
+		ResetParsedFlags()
+
+		for k := range env {
+			os.Unsetenv(k)
+		}
+		for _, entry := range prevEnv {
+			parts := strings.SplitN(entry, "=", 2)
+			os.Setenv(parts[0], parts[1])
+		}
+	})
+}
+
+func TestCombinations(t *testing.T) {
+	args := append([]string{}, os.Args...)
+	t.Cleanup(func() { os.Args = args })
+	cases := []struct {
+		Env     map[string]string
+		Args    []string
+		Func    func() bool
+		Expects bool
+	}{
+		{
+			Env:     map[string]string{},
+			Args:    []string{},
+			Func:    VerboseEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{env.Verbose: "1"},
+			Args:    []string{"--silent"},
+			Func:    VerboseEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{env.Verbose: "1"},
+			Args:    []string{},
+			Func:    VerboseEnabled,
+			Expects: true,
+		},
+		{
+			Env:     map[string]string{env.Silent: "1"},
+			Args:    []string{},
+			Func:    VerboseEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{},
+			Args:    []string{},
+			Func:    SilenceEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{env.Silent: "1"},
+			Args:    []string{},
+			Func:    SilenceEnabled,
+			Expects: true,
+		},
+		{
+			Env:     map[string]string{env.Silent: "1"},
+			Args:    []string{"--verbose"},
+			Func:    SilenceEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{env.Verbose: "1"},
+			Args:    []string{"--silent"},
+			Func:    SilenceEnabled,
+			Expects: true,
+		},
+		{
+			Env:     map[string]string{env.ForceColor: "1"},
+			Args:    []string{"--no-color"},
+			Func:    ColorEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{},
+			Args:    []string{},
+			Func:    ColorEnabled,
+			Expects: true,
+		},
+		{
+			Env:     map[string]string{env.ForceColor: "1"},
+			Args:    []string{},
+			Func:    ColorEnabled,
+			Expects: true,
+		},
+		{
+			Env:     map[string]string{env.ForceColor: "1"},
+			Args:    []string{"--no-color"},
+			Func:    ColorEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{env.NoColor: "1"},
+			Args:    []string{},
+			Func:    ColorEnabled,
+			Expects: false,
+		},
+		{
+			Env:     map[string]string{env.NoColor: "1"},
+			Args:    []string{"--color"},
+			Func:    ColorEnabled,
+			Expects: true,
+		},
+	}
+
+	for _, c := range cases {
+		fname := runtime.FuncForPC(reflect.ValueOf(c.Func).Pointer()).Name()
+		name := fmt.Sprintf("%v/%v/%s", fname, c.Env, c.Args)
+		t.Run(name, func(t *testing.T) {
+			withEnv(t, c.Env)
+			os.Args = c.Args
+			if res := c.Func(); res != c.Expects {
+				t.Fatalf("%s got %v wanted: %v", name, res, c.Expects)
+			}
+		})
+	}
+}
+
+func TestEnabled(t *testing.T) {
 	cases := []struct {
 		Name    string
 		Func    func() bool
@@ -27,6 +158,7 @@ func TestEnabled(t *testing.T) {
 			Func:    VerboseEnabled,
 			Expects: true,
 		},
+
 		{
 			Name:    env.Silent,
 			Func:    SilenceEnabled,
@@ -64,7 +196,7 @@ func TestEnabled(t *testing.T) {
 		}
 		for _, val := range enabled {
 			t.Run("enabled-"+val, func(t *testing.T) {
-				os.Setenv(c.Name, val)
+				withEnv(t, map[string]string{c.Name: val})
 				if c.Func() != c.Expects {
 					t.Fatalf("%s wasn't enabled with a valid value: %s", name, val)
 				}
@@ -74,7 +206,7 @@ func TestEnabled(t *testing.T) {
 		disabled := []string{"", "no", "false", "0", "disabled"}
 		for _, val := range disabled {
 			t.Run("disabled-"+val, func(t *testing.T) {
-				os.Setenv(c.Name, val)
+				withEnv(t, map[string]string{c.Name: val})
 				if c.Func() == c.Expects {
 					t.Fatalf("%s was enabled with falsy value: %s", name, val)
 				}
@@ -84,40 +216,46 @@ func TestEnabled(t *testing.T) {
 }
 
 func TestSilent(t *testing.T) {
-	origArgs := os.Args
-	t.Cleanup(func() {
-		os.Args = origArgs
-	})
+	args := append([]string{}, os.Args...)
+	t.Cleanup(func() { os.Args = args })
 	t.Run("SILENT = silence", func(t *testing.T) {
-		t.Setenv(env.Silent, "1")
-		t.Setenv(env.Verbose, "")
+		withEnv(t, map[string]string{
+			env.Silent:  "1",
+			env.Verbose: "",
+		})
 		os.Args = []string{}
 		if !SilenceEnabled() {
 			t.Fail()
 		}
 	})
 
-	t.Run("SILENT + VERBOSE = silence", func(t *testing.T) {
-		t.Setenv(env.Silent, "1")
-		t.Setenv(env.Verbose, "1")
+	t.Run("SILENT+VERBOSE=silence", func(t *testing.T) {
+		withEnv(t, map[string]string{
+			env.Silent:  "1",
+			env.Verbose: "1",
+		})
 		os.Args = []string{}
-		if SilenceEnabled() {
+		if !SilenceEnabled() {
 			t.Fail()
 		}
 	})
 
-	t.Run("VERBOSE + --silent = silent", func(t *testing.T) {
-		t.Setenv(env.Silent, "")
-		t.Setenv(env.Verbose, "1")
+	t.Run("VERBOSE+--silent=silent", func(t *testing.T) {
+		withEnv(t, map[string]string{
+			env.Silent:  "0",
+			env.Verbose: "1",
+		})
 		os.Args = []string{"some", "random", "--silent", "args"}
 		if !SilenceEnabled() {
 			t.Fail()
 		}
 	})
 
-	t.Run("--silent = silent", func(t *testing.T) {
-		t.Setenv(env.Silent, "")
-		t.Setenv(env.Verbose, "")
+	t.Run("--silent=silent", func(t *testing.T) {
+		withEnv(t, map[string]string{
+			env.Silent:  "",
+			env.Verbose: "",
+		})
 		os.Args = []string{"some", "random", "--silent", "args"}
 		if !SilenceEnabled() {
 			t.Fail()
@@ -125,10 +263,15 @@ func TestSilent(t *testing.T) {
 	})
 
 	t.Run("nothing = nothing", func(t *testing.T) {
-		t.Setenv(env.Silent, "")
-		t.Setenv(env.Verbose, "")
+		withEnv(t, map[string]string{
+			env.Silent:  "",
+			env.Verbose: "",
+		})
 		os.Args = []string{"some", "random", "args"}
 		if SilenceEnabled() {
+			t.Fail()
+		}
+		if VerboseEnabled() {
 			t.Fail()
 		}
 	})
@@ -136,9 +279,11 @@ func TestSilent(t *testing.T) {
 
 func TestEnvironmentMapEnabled(t *testing.T) {
 	trueString := strconv.FormatBool(true)
-	os.Setenv(env.ForceColor, trueString)
-	os.Setenv(env.Debug, trueString)
-	os.Setenv(env.Verbose, trueString)
+	withEnv(t, map[string]string{
+		env.ForceColor: trueString,
+		env.Debug:      trueString,
+		env.Verbose:    trueString,
+	})
 
 	res := EnvironmentMap()
 	if res == nil {

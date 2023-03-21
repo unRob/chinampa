@@ -91,7 +91,9 @@ func Execute(version string) error {
 			if idx == len(cmd.Path)-1 {
 				leaf := ToCobra(cmd, cmdRoot.Options)
 				container.AddCommand(leaf)
-				container.ValidArgs = append(container.ValidArgs, leaf.Name())
+				if container != ccRoot {
+					container.ValidArgs = append(container.ValidArgs, leaf.Name())
+				}
 				log.Tracef("cobra: %s => %s", leaf.Name(), container.CommandPath())
 				break
 			}

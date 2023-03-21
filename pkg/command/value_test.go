@@ -138,7 +138,7 @@ func TestResolveTemplate(t *testing.T) {
 					},
 				},
 			}).SetBindings()
-			cmd.Arguments.Parse(test.Args)
+			cmd.Arguments.Parse(test.Args) // nolint: errcheck
 			cmd.Options.Parse(test.Flags)
 			res, err := cmd.ResolveTemplate(test.Tpl, "")
 

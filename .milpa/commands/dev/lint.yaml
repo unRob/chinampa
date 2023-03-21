@@ -1,0 +1,3 @@
+summary: Runs linter on go files
+description: |
+  basically golangci-lint

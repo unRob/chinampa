@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright © 2021 Roberto Hidalgo <chinampa@un.rob.mx>
+// Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
 package commands
 
 import (
@@ -14,7 +14,8 @@ var GenerateCompletions = &cobra.Command{
 	Hidden:            true,
 	DisableAutoGenTag: true,
 	SilenceUsage:      true,
-	Args:              cobra.MinimumNArgs(1),
+	Args:              cobra.ExactArgs(1),
+	ValidArgs:         []string{"bash", "fish", "zsh"},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		switch args[0] {
 		case "bash":

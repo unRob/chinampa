@@ -39,7 +39,7 @@ func testCommand() *Command {
 
 func TestParse(t *testing.T) {
 	cmd := testCommand()
-	cmd.Arguments.Parse([]string{"asdf", "one", "two", "three"})
+	cmd.Arguments.Parse([]string{"asdf", "one", "two", "three"}) // nolint: errcheck
 	known := cmd.Arguments.AllKnown()
 
 	if !cmd.Arguments[0].IsKnown() {
@@ -67,7 +67,7 @@ func TestParse(t *testing.T) {
 	}
 
 	cmd = testCommand()
-	cmd.Arguments.Parse([]string{"asdf"})
+	cmd.Arguments.Parse([]string{"asdf"}) // nolint: errcheck
 	known = cmd.Arguments.AllKnown()
 
 	if !cmd.Arguments[0].IsKnown() {
@@ -209,7 +209,7 @@ func TestArgumentsValidate(t *testing.T) {
 		cmd.Arguments[1] = staticArgument("second", "", []string{"one", "two", "three"}, true)
 		cmd.SetBindings()
 
-		cmd.Arguments.Parse([]string{"first", "one", "three", "two"})
+		cmd.Arguments.Parse([]string{"first", "one", "three", "two"}) // nolint: errcheck
 
 		err := cmd.Arguments.AreValid()
 		if err == nil {
@@ -219,7 +219,7 @@ func TestArgumentsValidate(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.Command.FullName(), func(t *testing.T) {
-			c.Command.Arguments.Parse(c.Args)
+			c.Command.Arguments.Parse(c.Args) // nolint: errcheck
 
 			err := c.Command.Arguments.AreValid()
 			if err == nil {
@@ -231,144 +231,6 @@ func TestArgumentsValidate(t *testing.T) {
 		})
 	}
 }
-
-// func TestArgumentsToEnv(t *testing.T) {
-// 	cases := []struct {
-// 		Command *Command
-// 		Args    []string
-// 		Expect  []string
-// 		Env     []string
-// 	}{
-// 		{
-// 			Args:   []string{"something"},
-// 			Expect: []string{"export MILPA_ARG_FIRST=something"},
-// 			Command: &Command{
-// 				// Name: []string{"test", "required", "present"},
-// 				Arguments: []*Argument{
-// 					{
-// 						Name:     "first",
-// 						Required: true,
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Args:   []string{},
-// 			Expect: []string{"export MILPA_ARG_FIRST=default"},
-// 			Command: &Command{
-// 				// Name: []string{"test", "default", "present"},
-// 				Arguments: []*Argument{
-// 					{
-// 						Name:    "first",
-// 						Default: "default",
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Args: []string{"zero", "one", "two", "three"},
-// 			Expect: []string{
-// 				"export MILPA_ARG_FIRST=zero",
-// 				"declare -a MILPA_ARG_VARIADIC='( one two three )'",
-// 			},
-// 			Command: &Command{
-// 				// Name: []string{"test", "variadic"},
-// 				Arguments: []*Argument{
-// 					{
-// 						Name:    "first",
-// 						Default: "default",
-// 					},
-// 					{
-// 						Name:     "variadic",
-// 						Variadic: true,
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Args:   []string{},
-// 			Expect: []string{"export MILPA_ARG_FIRST=default"},
-// 			Command: &Command{
-// 				// Name: []string{"test", "static", "default"},
-// 				Arguments: []*Argument{
-// 					{
-// 						Name:    "first",
-// 						Default: "default",
-// 						Values: &ValueSource{
-// 							Static: &[]string{
-// 								"default",
-// 								"good",
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Args:   []string{"good"},
-// 			Expect: []string{"export MILPA_ARG_FIRST=good"},
-// 			Command: &Command{
-// 				// Name: []string{"test", "static", "good"},
-// 				Arguments: []*Argument{
-// 					{
-// 						Name:    "first",
-// 						Default: "default",
-// 						Values: &ValueSource{
-// 							Static: &[]string{
-// 								"default",
-// 								"good",
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			Args:   []string{"good"},
-// 			Expect: []string{"export MILPA_ARG_FIRST=good"},
-// 			Command: &Command{
-// 				// Name: []string{"test", "script", "good"},
-// 				Arguments: []*Argument{
-// 					{
-// 						Name:    "first",
-// 						Default: "default",
-// 						Values: &ValueSource{
-// 							Script: "echo good; echo default",
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-
-// 	for _, c := range cases {
-// 		t.Run(c.Command.FullName(), func(t *testing.T) {
-// 			dst := []string{}
-// 			c.Command.SetBindings()
-// 			c.Command.Arguments.Parse(c.Args)
-// 			c.Command.Arguments.ToEnv(c.Command, &dst, "export ")
-
-// 			err := c.Command.Arguments.AreValid()
-// 			if err != nil {
-// 				t.Fatalf("Unexpected failure validating: %s", err)
-// 			}
-
-// 			for _, expected := range c.Expect {
-// 				found := false
-// 				for _, actual := range dst {
-// 					if strings.HasPrefix(actual, expected) {
-// 						found = true
-// 						break
-// 					}
-// 				}
-
-// 				if !found {
-// 					t.Fatalf("Expected line %v not found in %v", expected, dst)
-// 				}
-// 			}
-// 		})
-// 	}
-// }
 
 func TestArgumentToDesc(t *testing.T) {
 	cases := []struct {

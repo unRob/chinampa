@@ -1,13 +1,37 @@
+// Copyright © 2022 Roberto Hidalgo <chinampa@un.rob.mx>
+// SPDX-License-Identifier: Apache-2.0
 package logger
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
+	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 )
+
+var bold *color.Color
+var boldRedBG *color.Color
+var boldRed *color.Color
+var boldYellowBG *color.Color
+var boldYellow *color.Color
+var dimmed *color.Color
+
+func init() {
+	bold = color.New(color.Bold)
+	bold.EnableColor()
+	boldRedBG = color.New(color.Bold, color.BgRed)
+	boldRedBG.EnableColor()
+	boldRed = color.New(color.Bold, color.FgHiRed)
+	boldRed.EnableColor()
+	boldYellowBG = color.New(color.Bold, color.BgYellow, color.FgBlack)
+	boldYellowBG.EnableColor()
+	boldYellow = color.New(color.Bold, color.FgHiYellow)
+	boldYellow.EnableColor()
+	dimmed = color.New(color.Faint)
+	dimmed.EnableColor()
+}
 
 type Formatter struct {
 }
@@ -16,7 +40,8 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	prefix := ""
 	colorEnabled := runtime.ColorEnabled()
 	message := entry.Message
-	if runtime.VerboseEnabled() {
+	switch {
+	case runtime.VerboseEnabled():
 		date := strings.Replace(entry.Time.Local().Format(time.DateTime), " ", "T", 1)
 		component := ""
 		if c, ok := entry.Data[componentKey]; ok {
@@ -24,36 +49,40 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 		}
 		level := entry.Level.String()
 		if colorEnabled {
-			if entry.Level <= logrus.ErrorLevel {
-				level = "\033[31m\033[1m" + level + "\033[0m"
-			} else if entry.Level == logrus.WarnLevel {
-				level = "\033[33m\033[1m" + level + "\033[0m"
-			} else if entry.Level >= logrus.DebugLevel && colorEnabled {
-				message = "\033[2m" + message + "\033[0m"
+			switch {
+			case entry.Level <= logrus.ErrorLevel:
+				level = boldRed.Sprint(level)
+			case entry.Level == logrus.WarnLevel:
+				level = boldYellow.Sprint(level)
+			case entry.Level >= logrus.DebugLevel:
+				level = dimmed.Sprint(level)
+				message = dimmed.Sprint(message)
+			default:
+				level = dimmed.Sprint(level)
 			}
 		}
 
-		prefix = fmt.Sprintf("\033[2m%s %s%s\033[0m\t", date, level, component)
-	} else if entry.Level == logrus.ErrorLevel {
+		prefix = dimmed.Sprint(date) + " " + level + dimmed.Sprint(component) + "\t"
+	case entry.Level == logrus.ErrorLevel:
 		if colorEnabled {
-			prefix = "\033[41m\033[1m ERROR \033[0m "
+			prefix = boldRedBG.Sprint(" ERROR ") + " "
 		} else {
 			prefix = "ERROR: "
 		}
-	} else if entry.Level == logrus.WarnLevel {
+	case entry.Level == logrus.WarnLevel:
 		if colorEnabled {
-			prefix = "\033[43m\033[31m warning \033[0m "
-			message = "\033[33m" + message + "\033[0m"
+			prefix = boldYellowBG.Sprint(" WARNING ") + " "
 		} else {
 			prefix = "WARNING: "
 		}
-	} else if entry.Level >= logrus.DebugLevel {
+	case entry.Level >= logrus.DebugLevel:
 		if colorEnabled {
-			prefix = "\033[2m" + entry.Level.String() + ":\033[0m "
-			message = "\033[2m" + message + "\033[0m"
+			prefix = dimmed.Sprintf("%s: ", strings.ToUpper(entry.Level.String()))
+			message = dimmed.Sprint(message)
 		} else {
 			prefix = strings.ToUpper(entry.Level.String()) + ": "
 		}
 	}
+
 	return []byte(prefix + message + "\n"), nil
 }
