@@ -21,7 +21,7 @@ var dimmed *color.Color
 func init() {
 	bold = color.New(color.Bold)
 	bold.EnableColor()
-	boldRedBG = color.New(color.Bold, color.BgRed)
+	boldRedBG = color.New(color.Bold, color.BgRed, 225)
 	boldRedBG.EnableColor()
 	boldRed = color.New(color.Bold, color.FgHiRed)
 	boldRed.EnableColor()

@@ -142,7 +142,7 @@ func TestFormatter(t *testing.T) {
 			Call:    Error,
 			Level:   logrus.InfoLevel,
 			Color:   true,
-			Expects: "\033[1;41m ERROR \033[0m message",
+			Expects: "\033[1;41;225m ERROR \033[0m message",
 		},
 	}
 
