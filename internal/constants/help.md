@@ -1,6 +1,6 @@
 {{- if not .HTMLOutput }}
 # {{ .Spec.FullName }}{{if eq .Command.Name "help"}} help{{end}}
-{{- else }}
+{{- else -}}
 ---
 description: {{ .Command.Short }}
 ---
@@ -16,15 +16,18 @@ description: {{ .Command.Short }}
 ## Description
 
 {{ .Spec.Description }}
-{{ end -}}
 {{- if .Spec.HasAdditionalHelp }}
 {{ .Spec.AdditionalHelp .HTMLOutput }}
+{{ end -}}
 {{ end -}}
 
 {{- if (and (not .Spec.IsRoot) .Spec.Description) }}
 ## Description
 
 {{ if not (eq .Command.Long "") }}{{ .Command.Long }}{{ else }}{{ .Spec.Description }}{{end}}
+{{- if .Spec.HasAdditionalHelp }}
+{{ .Spec.AdditionalHelp .HTMLOutput }}
+{{ end -}}
 {{ end }}
 
 
