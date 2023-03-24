@@ -17,26 +17,21 @@ var Root = &Command{
 			Type:        "bool",
 			Description: "Display help for any command",
 		},
-		"verbose": &Option{
-			ShortName:   "v",
+		"color": &Option{
 			Type:        "bool",
-			Default:     runtime.VerboseEnabled(),
-			Description: "Log verbose output to stderr",
-		},
-		"version": &Option{
-			Type:        "bool",
-			Default:     false,
-			Description: "Display program version and exit",
+			Description: "Always print colors to stderr",
+			Default:     runtime.ColorEnabled(),
 		},
 		"no-color": &Option{
 			Type:        "bool",
 			Description: "Disable printing of colors to stderr",
 			Default:     !runtime.ColorEnabled(),
 		},
-		"color": &Option{
+		"verbose": &Option{
+			ShortName:   "v",
 			Type:        "bool",
-			Description: "Always print colors to stderr",
-			Default:     runtime.ColorEnabled(),
+			Default:     runtime.VerboseEnabled(),
+			Description: "Log verbose output to stderr",
 		},
 		"silent": &Option{
 			Type:        "bool",
@@ -45,6 +40,11 @@ var Root = &Command{
 		"skip-validation": &Option{
 			Type:        "bool",
 			Description: "Do not validate any arguments or options",
+		},
+		"version": &Option{
+			Type:        "bool",
+			Default:     false,
+			Description: "Display program version and exit",
 		},
 	},
 }

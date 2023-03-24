@@ -112,7 +112,6 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 				continue
 			}
 		}
-
 		cmd.runtimeFlags = fs
 	}
 	return cmd.runtimeFlags

@@ -12,8 +12,10 @@ import (
 	"git.rob.mx/nidito/chinampa/pkg/command"
 	"git.rob.mx/nidito/chinampa/pkg/errors"
 	"git.rob.mx/nidito/chinampa/pkg/logger"
+	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // ContextKeyRuntimeIndex is the string key used to store context in a cobra Command.
@@ -65,7 +67,21 @@ func Execute(version string) error {
 	cmdRoot := command.Root
 	ccRoot := newCobraRoot(command.Root)
 	ccRoot.CompletionOptions.HiddenDefaultCmd = true
-	ccRoot.PersistentFlags().AddFlagSet(cmdRoot.FlagSet())
+	globalOptions := command.Options{}
+	cmdRoot.FlagSet().VisitAll(func(f *pflag.Flag) {
+		opt := command.Root.Options[f.Name]
+		if f.Name == "version" {
+			ccRoot.Flags().AddFlag(f)
+		} else {
+			ccRoot.PersistentFlags().AddFlag(f)
+			globalOptions[f.Name] = opt
+		}
+
+		if err := ccRoot.RegisterFlagCompletionFunc(f.Name, opt.CompletionFunction); err != nil {
+			log.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", f.Name, cmdRoot.FullName())
+		}
+	})
+
 	if version != "" {
 		name := commands.VersionCommandName
 		ccRoot.Annotations["version"] = version
@@ -75,20 +91,13 @@ func Execute(version string) error {
 	}
 	ccRoot.AddCommand(commands.GenerateCompletions)
 
-	for name, opt := range cmdRoot.Options {
-		if err := ccRoot.RegisterFlagCompletionFunc(name, opt.CompletionFunction); err != nil {
-			log.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmdRoot.FullName())
-		}
-	}
-
-	ccRoot.SetHelpFunc(cmdRoot.HelpRenderer(cmdRoot.Options))
-
+	ccRoot.SetHelpFunc(cmdRoot.HelpRenderer(globalOptions))
 	for _, cmd := range CommandList() {
 		cmd := cmd
 		container := ccRoot
 		for idx, cp := range cmd.Path {
 			if idx == len(cmd.Path)-1 {
-				leaf := ToCobra(cmd, cmdRoot.Options)
+				leaf := ToCobra(cmd, globalOptions)
 				container.AddCommand(leaf)
 				log.Tracef("cobra: %s => %s", leaf.Name(), container.CommandPath())
 				break
@@ -160,7 +169,7 @@ func Execute(version string) error {
 					Options:     command.Options{},
 				}
 				Register(groupParent)
-				cc.SetHelpFunc(groupParent.HelpRenderer(command.Options{}))
+				cc.SetHelpFunc(groupParent.HelpRenderer(globalOptions))
 				cc.SetHelpCommand(commands.Help)
 				container.AddCommand(cc)
 				container = cc
@@ -170,6 +179,7 @@ func Execute(version string) error {
 		cmd.Path = append(cmdRoot.Path, cmd.Path...)
 	}
 	cmdRoot.SetCobra(ccRoot)
+	commands.Help.Long = strings.ReplaceAll(commands.Help.Long, "@chinampa@", runtime.Executable)
 	ccRoot.SetHelpCommand(commands.Help)
 
 	current, remaining, err := ccRoot.Find(os.Args[1:])

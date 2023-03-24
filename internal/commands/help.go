@@ -9,7 +9,6 @@ import (
 
 	_c "git.rob.mx/nidito/chinampa/internal/constants"
 	"git.rob.mx/nidito/chinampa/pkg/env"
-	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"git.rob.mx/nidito/chinampa/pkg/statuscode"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -24,13 +23,13 @@ func cobraCommandFullName(c *cobra.Command) []string {
 }
 
 var Help = &cobra.Command{
-	Use:   _c.HelpCommandName + " [command]",
+	Use:   _c.HelpCommandName,
 	Short: "Display usage information for any command",
-	Long: `Help provides the valid arguments and options for any command known to ﹅@chinampa@﹅.
+	Long: `Provides documentation for any command known to ﹅@chinampa@﹅, including its known arguments and options.
 
-## Colorized output
+### Colorized output
 
-By default, and unless ﹅` + env.NoColor + `﹅ is set, ﹅@chinampa@ help﹅ will query the environment variable ﹅COLORFGBG﹅ to decide which style to use when rendering help, unless if ﹅` + env.HelpStyle + `﹅ is set to any of the following values: **light**, **dark**, **markdown**, and **auto**. 24-bit color is available when ﹅COLORTERM﹅ is set to ﹅truecolor﹅.`,
+By default, and unless ﹅` + env.NoColor + `﹅ is set, ﹅@chinampa@ help﹅ will query the environment variable ﹅COLORFGBG﹅ to decide which style to use when rendering help, unless if ﹅` + env.HelpStyle + `﹅ is set to any of the following values: **light**, **dark**, **markdown**, or **auto**. 24-bit color is available when ﹅COLORTERM﹅ is set to ﹅truecolor﹅.`,
 	ValidArgsFunction: func(c *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		var completions []string
 		cmd, _, e := c.Root().Find(args)
@@ -51,7 +50,6 @@ By default, and unless ﹅` + env.NoColor + `﹅ is set, ﹅@chinampa@ help﹅ w
 		return completions, cobra.ShellCompDirectiveNoFileComp
 	},
 	Run: func(c *cobra.Command, args []string) {
-		c.Long = strings.ReplaceAll(c.Long, "@chinampa@", runtime.Executable)
 		if len(args) > 0 && c != nil && c.Name() != args[len(args)-1] {
 			c, topicArgs, err := c.Root().Find(args)
 			if err == nil && c != nil && len(topicArgs) == 0 {
