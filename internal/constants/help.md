@@ -12,10 +12,14 @@ description: {{ .Command.Short }}
 
   `{{ replace .Command.UseLine " [flags]" "" }}{{if .Command.HasAvailableSubCommands}} SUBCOMMAND{{end}}`
 
-{{ if and .Spec.IsRoot (not (eq .Command.Name "help")) }}
+{{ if .Spec.IsRoot }}
 ## Description
 
+{{ if eq .Command.Name "help" -}}
+{{ .Command.Long }}
+{{- else -}}
 {{ .Spec.Description }}
+{{- end }}
 {{- if .Spec.HasAdditionalHelp }}
 {{ .Spec.AdditionalHelp .HTMLOutput }}
 {{ end -}}

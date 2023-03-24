@@ -173,17 +173,8 @@ func TestEnabled(t *testing.T) {
 			Func: ColorEnabled,
 		},
 		{
-			Name: env.HelpUnstyled,
-			Func: ColorEnabled,
-		},
-		{
 			Name:    env.Debug,
 			Func:    DebugEnabled,
-			Expects: true,
-		},
-		{
-			Name:    env.HelpUnstyled,
-			Func:    UnstyledHelpEnabled,
 			Expects: true,
 		},
 	}

@@ -47,26 +47,16 @@ func (cmd *Command) HelpRenderer(globalOptions Options) func(cc *cobra.Command, 
 
 func (cmd *Command) ShowHelp(globalOptions Options, args []string) ([]byte, error) {
 	var buf bytes.Buffer
+	colorEnabled := runtime.ColorEnabled()
 	c := &combinedCommand{
 		Spec:          cmd,
 		Command:       cmd.Cobra,
 		GlobalOptions: globalOptions,
-		HTMLOutput:    runtime.UnstyledHelpEnabled(),
+		HTMLOutput:    runtime.HelpStyle() == "markdown",
 	}
 	err := render.HelpTemplate(runtime.Executable).Execute(&buf, c)
 	if err != nil {
 		return nil, err
-	}
-
-	colorEnabled := runtime.ColorEnabled()
-	flags := cmd.Cobra.Flags()
-	ncf := cmd.Cobra.Flag("no-color") // nolint:ifshort
-	cf := cmd.Cobra.Flag("color")     // nolint:ifshort
-
-	if noColorFlag, err := flags.GetBool("no-color"); err == nil && ncf.Changed {
-		colorEnabled = !noColorFlag
-	} else if colorFlag, err := flags.GetBool("color"); err == nil && cf.Changed {
-		colorEnabled = colorFlag
 	}
 
 	content, err := render.Markdown(buf.Bytes(), colorEnabled)

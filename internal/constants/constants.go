@@ -7,7 +7,10 @@ import (
 	_ "embed"
 )
 
+// HelpCommandName sets the name for the command that offers help.
 const HelpCommandName = "help"
 
+// HelpTemplate is the markdown template to use when rendering help.
+//
 //go:embed help.md
 var HelpTemplate string

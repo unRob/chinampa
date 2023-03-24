@@ -11,7 +11,6 @@ Package env holds environment variable names that are meant to be overridden by 
 	import "git.rob.mx/nidito/chinampa/env"
 
 	func init() {
-		env.HelpUnstyled = "MY_APP_PLAIN_HELP"
 		env.HelpStyle = "MY_APP_HELP_STYLE"
 		env.Verbose = "MY_APP_VERBOSE"
 		env.Silent = "MY_APP_SILENT"
@@ -19,9 +18,6 @@ Package env holds environment variable names that are meant to be overridden by 
 	}
 */
 package env
-
-// HelpUnstyled means help will not be colored nor formatted for a TTY.
-var HelpUnstyled = "HELP_STYLE_PLAIN"
 
 // HelpStyle identifies the theme to use for help formatting.
 var HelpStyle = "HELP_STYLE"

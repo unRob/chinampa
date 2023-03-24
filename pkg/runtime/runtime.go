@@ -9,6 +9,7 @@ package runtime
 import (
 	"os"
 	"strconv"
+	"strings"
 
 	"git.rob.mx/nidito/chinampa/pkg/env"
 )
@@ -129,12 +130,12 @@ func ColorEnabled() bool {
 	}
 
 	// we're talking to ttys, we want color unless NO_COLOR/--no-color
-	return !(isTrueIsh(os.Getenv(env.NoColor)) || UnstyledHelpEnabled() || flagInArgs("no-color"))
+	return !(isTrueIsh(os.Getenv(env.NoColor)) || flagInArgs("no-color"))
 }
 
-// UnstyledHelpEnabled tells if help should be printed without formatting.
-func UnstyledHelpEnabled() bool {
-	return isTrueIsh(os.Getenv(env.HelpUnstyled))
+// HelpStyle returns the style to use when rendering help.
+func HelpStyle() string {
+	return strings.ToLower(os.Getenv(env.HelpStyle))
 }
 
 // EnvironmentMap returns a map of environment keys for color, debugging and verbosity and their values, ready for `os.Setenv`.

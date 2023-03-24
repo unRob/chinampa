@@ -14,7 +14,7 @@ import (
 
 func TestMarkdownUnstyled(t *testing.T) {
 	content := []byte("# hello")
-	os.Setenv(env.HelpUnstyled, "true")
+	os.Setenv(env.HelpStyle, "markdown")
 	res, err := render.Markdown(content, false)
 
 	if err != nil {
@@ -28,7 +28,7 @@ func TestMarkdownUnstyled(t *testing.T) {
 }
 
 func TestMarkdownNoColor(t *testing.T) {
-	os.Unsetenv(env.HelpUnstyled)
+	os.Unsetenv(env.HelpStyle)
 	content := []byte("# hello ﹅world﹅")
 	res, err := render.Markdown(content, false)
 
@@ -51,7 +51,7 @@ var autoStyleTestRender = "\n\x1b[38;5;228;48;5;63;1m\x1b[0m\x1b[38;5;228;48;5;6
 const lightStyleTestRender = "\n\x1b[38;5;228;48;5;63;1m\x1b[0m\x1b[38;5;228;48;5;63;1m\x1b[0m  \x1b[38;5;228;48;5;63;1m \x1b[0m\x1b[38;5;228;48;5;63;1mhello\x1b[0m\x1b[38;5;228;48;5;63;1m \x1b[0m\x1b[38;5;234m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[38;5;234m \x1b[0m\x1b[0m\n\x1b[0m\n"
 
 func TestMarkdownColor(t *testing.T) {
-	os.Unsetenv(env.HelpUnstyled)
+	os.Unsetenv(env.HelpStyle)
 	content := []byte("# hello")
 
 	styles := map[string][]byte{
