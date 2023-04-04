@@ -54,7 +54,7 @@ func newCobraRoot(root *command.Command) *cobra.Command {
 	}
 }
 
-func ToCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command {
+func ToCobra(cmd *command.Command, globalOptions command.Options, parent *cobra.Command) *cobra.Command {
 	localName := cmd.Name()
 	useSpec := []string{localName, "[options]"}
 	for _, arg := range cmd.Arguments {
@@ -97,8 +97,20 @@ func ToCobra(cmd *command.Command, globalOptions command.Options) *cobra.Command
 			log.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmd.FullName())
 		}
 	}
+	parent.AddCommand(cc)
 
-	cc.SetHelpFunc(cmd.HelpRenderer(globalOptions))
+	cmdGlobalOptions := globalOptions
+	if parent != cc.Root() {
+		cmdGlobalOptions = subOptions(globalOptions)
+		log.Tracef("Adding subflags from %s to child %s", parent.Name(), cmd.FullName())
+		if p := FromCobra(parent); p != nil {
+			for key, opt := range p.Options {
+				cmdGlobalOptions[key] = opt
+			}
+		}
+	}
+
+	cc.SetHelpFunc(cmd.HelpRenderer(cmdGlobalOptions))
 	cmd.SetCobra(cc)
 	return cc
 }

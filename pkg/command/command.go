@@ -73,7 +73,6 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 		fs := pflag.NewFlagSet(strings.Join(cmd.Path, " "), pflag.ContinueOnError)
 		fs.SortFlags = false
 		fs.Usage = func() {}
-
 		for name, opt := range cmd.Options {
 			switch opt.Type {
 			case ValueTypeBoolean:
@@ -81,7 +80,6 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 				if opt.Default != nil {
 					def = opt.Default.(bool)
 				}
-
 				fs.BoolP(name, opt.ShortName, def, opt.Description)
 			case ValueTypeInt:
 				def := -1
@@ -97,7 +95,6 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 						def = casted
 					}
 				}
-
 				fs.IntP(name, opt.ShortName, def, opt.Description)
 			case ValueTypeDefault, ValueTypeString:
 				opt.Type = ValueTypeString
@@ -112,6 +109,7 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 				continue
 			}
 		}
+
 		cmd.runtimeFlags = fs
 	}
 	return cmd.runtimeFlags

@@ -62,6 +62,14 @@ func CommandList() []*command.Command {
 	return registry.byPath
 }
 
+func subOptions(m command.Options) command.Options {
+	m2 := make(map[string]*command.Option, len(m))
+	for id, opt := range m {
+		m2[id] = opt
+	}
+	return m2
+}
+
 func Execute(version string) error {
 	log.Debug("starting execution")
 	cmdRoot := command.Root
@@ -97,10 +105,15 @@ func Execute(version string) error {
 		container := ccRoot
 		for idx, cp := range cmd.Path {
 			if idx == len(cmd.Path)-1 {
-				leaf := ToCobra(cmd, globalOptions)
-				container.AddCommand(leaf)
-				log.Tracef("cobra: %s => %s", leaf.Name(), container.CommandPath())
-				break
+				if cmd.Action != nil {
+					// nil actions come when the current command consists only
+					// of metadata for a "group parent" command
+					// and we don't wanna cobraize it like a regular, actionable one
+					leaf := ToCobra(cmd, globalOptions, container)
+					log.Tracef("cobra: %s => %s", leaf.Name(), container.CommandPath())
+					break
+				}
+				log.Tracef("Found command with no action: %s, assuming group parent action", cmd.Path)
 			}
 
 			query := []string{cp}
@@ -112,6 +125,11 @@ func Execute(version string) error {
 
 			for _, sub := range container.Commands() {
 				if sub.Name() == cp {
+					if parent := FromCobra(container); parent != nil {
+						log.Tracef("pflags to %s from %s", sub.Name(), parent.FullName())
+						fs := parent.FlagSet()
+						sub.PersistentFlags().AddFlagSet(fs)
+					}
 					container = sub
 					found = true
 				}
@@ -119,16 +137,35 @@ func Execute(version string) error {
 
 			if !found {
 				groupName := strings.Join(query, " ")
-				groupPath := append(cmdRoot.Path, append(cmd.Path[0:idx], query...)...) // nolint:gocritic
+				cleanPath := append(cmd.Path[0:idx], query...)
+				groupPath := append(cmdRoot.Path, cleanPath...) // nolint:gocritic
+
+				cmdGlobalOptions := globalOptions
+
+				groupParent := Get(groupName)
+				if groupParent == nil {
+					log.Tracef("creating group parent for %s", groupPath)
+					groupParent = &command.Command{
+						Path:        cleanPath,
+						Summary:     fmt.Sprintf("%s subcommands", groupName),
+						Description: fmt.Sprintf("Runs subcommands within %s", groupName),
+						Arguments:   command.Arguments{},
+						Options:     command.Options{},
+					}
+					Register(groupParent)
+				} else {
+					log.Tracef("using pre-existing group parent for %s (%s)", groupPath, groupParent.Path)
+				}
+
 				cc := &cobra.Command{
 					Use:                        cp,
-					Short:                      fmt.Sprintf("%s subcommands", groupName),
+					Short:                      groupParent.Summary,
 					DisableAutoGenTag:          true,
 					SuggestionsMinimumDistance: 2,
 					SilenceUsage:               true,
 					SilenceErrors:              true,
 					Annotations: map[string]string{
-						ContextKeyRuntimeIndex: strings.Join(groupPath, " "),
+						ContextKeyRuntimeIndex: strings.Join(cleanPath, " "),
 					},
 					ValidArgs: []string{},
 					Args: func(cmd *cobra.Command, args []string) error {
@@ -161,15 +198,23 @@ func Execute(version string) error {
 					},
 				}
 
-				groupParent := &command.Command{
-					Path:        groupPath,
-					Summary:     fmt.Sprintf("%s subcommands", groupName),
-					Description: fmt.Sprintf("Runs subcommands within %s", groupName),
-					Arguments:   command.Arguments{},
-					Options:     command.Options{},
+				if len(groupParent.Options) > 0 {
+					fs := cmd.FlagSet()
+					cc.PersistentFlags().AddFlagSet(fs)
+					log.Debugf("adding sub-global option set to %s", groupName)
 				}
-				Register(groupParent)
-				cc.SetHelpFunc(groupParent.HelpRenderer(globalOptions))
+
+				if container != cc.Root() {
+					cmdGlobalOptions = subOptions(globalOptions)
+					if p := FromCobra(container); p != nil {
+						for key, opt := range p.Options {
+							cmdGlobalOptions[key] = opt
+						}
+					}
+				}
+				cc.PersistentFlags().AddFlagSet(container.PersistentFlags())
+
+				cc.SetHelpFunc(groupParent.HelpRenderer(cmdGlobalOptions))
 				cc.SetHelpCommand(commands.Help)
 				container.AddCommand(cc)
 				container = cc
