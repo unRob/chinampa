@@ -152,6 +152,10 @@ func Execute(version string) error {
 						Arguments:   command.Arguments{},
 						Options:     command.Options{},
 					}
+					if groupParent.FullName() == cmd.FullName() {
+						groupParent.Summary = cmd.Summary
+						groupParent.Description = cmd.Description
+					}
 					Register(groupParent)
 				} else {
 					log.Tracef("using pre-existing group parent for %s (%s)", groupPath, groupParent.Path)
