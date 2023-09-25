@@ -57,7 +57,11 @@ func newCobraRoot(root *command.Command) *cobra.Command {
 func ToCobra(cmd *command.Command, globalOptions command.Options, parent *cobra.Command) *cobra.Command {
 	localName := cmd.Name()
 	useSpec := []string{localName, "[options]"}
-	for _, arg := range cmd.Arguments {
+	for idx, arg := range cmd.Arguments {
+		if arg == nil {
+			useSpec = append(useSpec, fmt.Sprintf("could not parse spec for argument %d of command %s", idx, cmd.FullName()))
+			continue
+		}
 		useSpec = append(useSpec, arg.ToDesc())
 	}
 
@@ -93,6 +97,10 @@ func ToCobra(cmd *command.Command, globalOptions command.Options, parent *cobra.
 	cc.Flags().AddFlagSet(cmd.FlagSet())
 
 	for name, opt := range cmd.Options {
+		if opt == nil {
+			useSpec = append(useSpec, fmt.Sprintf("could not parse spec for option %s of command %s", name, cmd.FullName()))
+			continue
+		}
 		if err := cc.RegisterFlagCompletionFunc(name, opt.CompletionFunction); err != nil {
 			log.Errorf("Failed setting up autocompletion for option <%s> of command <%s>", name, cmd.FullName())
 		}

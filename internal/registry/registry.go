@@ -105,7 +105,7 @@ func Execute(version string) error {
 		container := ccRoot
 		for idx, cp := range cmd.Path {
 			if idx == len(cmd.Path)-1 {
-				if cmd.Action != nil {
+				if cmd.Action != nil && cmd.Cobra == nil {
 					// nil actions come when the current command consists only
 					// of metadata for a "group parent" command
 					// and we don't wanna cobraize it like a regular, actionable one
