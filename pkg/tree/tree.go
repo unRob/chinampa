@@ -3,6 +3,7 @@
 package tree
 
 import (
+	"bytes"
 	"sort"
 
 	"git.rob.mx/nidito/chinampa/internal/registry"
@@ -31,8 +32,12 @@ func (t *CommandTree) Traverse(fn func(cmd *command.Command) error) error {
 var tree *CommandTree
 
 func Build(cc *cobra.Command, depth int) {
+	root := registry.FromCobra(cc)
+	if root == nil && cc.Root() == cc {
+		root = command.Root
+	}
 	tree = &CommandTree{
-		Command:  registry.FromCobra(cc),
+		Command:  root,
 		Children: []*CommandTree{},
 	}
 
@@ -59,11 +64,11 @@ func Build(cc *cobra.Command, depth int) {
 }
 
 func Serialize(serializationFn func(any) ([]byte, error)) (string, error) {
-	bytes, err := serializationFn(tree)
+	content, err := serializationFn(tree)
 	if err != nil {
 		return "", err
 	}
-	return string(bytes), nil
+	return string(bytes.ReplaceAll(content, []byte("﹅"), []byte("`"))), nil
 }
 
 func ChildrenNames() []string {
