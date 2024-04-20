@@ -41,6 +41,10 @@ func withEnv(t *testing.T, env map[string]string) {
 	})
 }
 
+func escaped(a string) string {
+	return strings.ReplaceAll(a, "\033", "\\033")
+}
+
 func TestFormatter(t *testing.T) {
 	now := strings.Replace(time.Now().Local().Format(time.DateTime), " ", "T", 1)
 	cases := []struct {
@@ -60,7 +64,7 @@ func TestFormatter(t *testing.T) {
 			Color:   true,
 			Verbose: true,
 			Call:    Info,
-			Expects: fmt.Sprintf("\033[2m%s\033[0m \033[2minfo\033[0m\033[2m\033[0m	message", now),
+			Expects: fmt.Sprintf("\033[2m%s\033[22m \033[2minfo\033[22m\033[2m\033[22m	message", now),
 			Level:   logrus.InfoLevel,
 		},
 		{
@@ -77,14 +81,14 @@ func TestFormatter(t *testing.T) {
 		{
 			Color:   true,
 			Call:    Debug,
-			Expects: "\033[2mDEBUG: \033[0m\033[2mmessage\033[0m",
+			Expects: "\033[2mDEBUG: \033[22m\033[2mmessage\033[22m",
 			Level:   logrus.DebugLevel,
 		},
 		{
 			Color:   true,
 			Verbose: true,
 			Call:    Debug,
-			Expects: fmt.Sprintf("\033[2m%s\033[0m \033[2mdebug\033[0m\033[2m\033[0m\t\033[2mmessage\033[0m",
+			Expects: fmt.Sprintf("\033[2m%s\033[22m \033[2mdebug\033[22m\033[2m\033[22m\t\033[2mmessage\033[22m",
 				now),
 			Level: logrus.DebugLevel,
 		},
@@ -113,13 +117,13 @@ func TestFormatter(t *testing.T) {
 			Level:   logrus.InfoLevel,
 			Color:   true,
 			Verbose: true,
-			Expects: fmt.Sprintf("\033[2m%s\033[0m \033[1;93mwarning\033[0m\033[2m\033[0m\tmessage", now),
+			Expects: fmt.Sprintf("\033[2m%s\033[22m \033[1;93mwarning\033[22;0m\033[2m\033[22m\tmessage", now),
 		},
 		{
 			Call:    Warn,
 			Level:   logrus.InfoLevel,
 			Color:   true,
-			Expects: "\033[1;43;30m WARNING \033[0m message",
+			Expects: "\033[1;43;30m WARNING \033[22;0;0m message",
 		},
 		{
 			Call:    Error,
@@ -136,13 +140,13 @@ func TestFormatter(t *testing.T) {
 			Level:   logrus.InfoLevel,
 			Color:   true,
 			Verbose: true,
-			Expects: fmt.Sprintf("\033[2m%s\033[0m \033[1;91merror\033[0m\033[2m\033[0m\tmessage", now),
+			Expects: fmt.Sprintf("\033[2m%s\033[22m \033[1;91merror\033[22;0m\033[2m\033[22m\tmessage", now),
 		},
 		{
 			Call:    Error,
 			Level:   logrus.InfoLevel,
 			Color:   true,
-			Expects: "\033[1;41;225m ERROR \033[0m message",
+			Expects: "\033[1;41;225m ERROR \033[22;0;0m message",
 		},
 	}
 
@@ -180,7 +184,7 @@ func TestFormatter(t *testing.T) {
 			}
 
 			if res := data.String(); res != expected {
-				t.Fatalf("%s:\ngot   : %s\nwanted: %v", name, res, expected)
+				t.Fatalf("%s:\ngot   : %s\nwanted: %v", name, escaped(res), escaped(expected))
 			}
 		})
 	}

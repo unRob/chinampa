@@ -45,7 +45,7 @@ func (cmd *Command) HelpRenderer(globalOptions Options) func(cc *cobra.Command, 
 	}
 }
 
-func (cmd *Command) ShowHelp(globalOptions Options, args []string) ([]byte, error) {
+func (cmd *Command) ShowHelp(globalOptions Options, _ []string) ([]byte, error) {
 	var buf bytes.Buffer
 	colorEnabled := runtime.ColorEnabled()
 	c := &combinedCommand{

@@ -72,10 +72,10 @@ By default, and unless ﹅` + env.NoColor + `﹅ is set, ﹅@chinampa@ help﹅ w
 				logrus.Errorf("Unknown help topic \"%s\"", args[0])
 			}
 			os.Exit(statuscode.NotFound)
-		} else {
-			c.InitDefaultHelpFlag() // make possible 'help' flag to be shown
-			cobra.CheckErr(c.Help())
 		}
+
+		c.InitDefaultHelpFlag() // make possible 'help' flag to be shown
+		cobra.CheckErr(c.Help())
 
 		os.Exit(statuscode.RenderHelp)
 	},

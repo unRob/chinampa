@@ -19,7 +19,7 @@ import (
 )
 
 // ContextKeyRuntimeIndex is the string key used to store context in a cobra Command.
-const ContextKeyRuntimeIndex = "x-chinampa-runtime-index"
+const ContextKeyRuntimeIndex = "x-chinampa-runtime-index" // nolint:gosec
 
 var ErrorHandler = errors.HandleCobraExit
 
@@ -137,7 +137,7 @@ func Execute(version string) error {
 
 			if !found {
 				groupName := strings.Join(query, " ")
-				cleanPath := append(cmd.Path[0:idx], query...)
+				cleanPath := append(cmd.Path[0:idx], query...)  // nolint:gocritic
 				groupPath := append(cmdRoot.Path, cleanPath...) // nolint:gocritic
 
 				cmdGlobalOptions := globalOptions
