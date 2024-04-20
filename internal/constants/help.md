@@ -64,7 +64,7 @@ description: {{ .Command.Short }}
 ## Options
 
 {{ range $name, $opt := .Spec.Options -}}
-- `--{{ $name }}` (_{{$opt.Type}}_): {{ trimSuffix $opt.Description "."}}.{{ if $opt.Default }} Default: _{{ $opt.Default }}_.{{ end }}
+- `--{{ $name }}` (_{{if $opt.Repeated}}[]{{end}}{{$opt.Type}}_): {{ trimSuffix $opt.Description "."}}.{{if $opt.Repeated}} May be specified more than once. {{end}}{{ if $opt.Default }} Default: _{{ $opt.Default }}_.{{ end }}
 {{ end -}}
 {{- end -}}
 

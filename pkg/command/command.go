@@ -98,11 +98,31 @@ func (cmd *Command) FlagSet() *pflag.FlagSet {
 				fs.IntP(name, opt.ShortName, def, opt.Description)
 			case ValueTypeDefault, ValueTypeString:
 				opt.Type = ValueTypeString
-				def := ""
-				if opt.Default != nil {
-					def = fmt.Sprintf("%s", opt.Default)
+				if opt.Repeated {
+					def := []string{}
+					if opt.Default != nil {
+						switch defV := opt.Default.(type) {
+						case []any:
+							for _, v := range defV {
+								def = append(def, fmt.Sprintf("%s", v))
+							}
+						case []string:
+							def = defV
+						case string:
+							def = []string{defV}
+						default:
+							logger.Errorf("Invalid default for repeated option %s configuration: %+v", name, defV)
+						}
+					}
+
+					fs.StringArrayP(name, opt.ShortName, def, opt.Description)
+				} else {
+					def := ""
+					if opt.Default != nil {
+						def = fmt.Sprintf("%s", opt.Default)
+					}
+					fs.StringP(name, opt.ShortName, def, opt.Description)
 				}
-				fs.StringP(name, opt.ShortName, def, opt.Description)
 			default:
 				// ignore flag
 				log.Warnf("Ignoring unknown option type <%s> for option <%s>", opt.Type, name)
