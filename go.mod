@@ -1,15 +1,15 @@
 module git.rob.mx/nidito/chinampa
 
-go 1.21
+go 1.22
 
 require (
 	github.com/charmbracelet/glamour v0.7.0
-	github.com/fatih/color v1.16.0
-	github.com/go-playground/validator/v10 v10.19.0
+	github.com/fatih/color v1.17.0
+	github.com/go-playground/validator/v10 v10.20.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/term v0.19.0
+	golang.org/x/term v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -35,8 +35,8 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/yuin/goldmark v1.7.1 // indirect
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 )
