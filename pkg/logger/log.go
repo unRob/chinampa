@@ -4,6 +4,7 @@ package logger
 
 import (
 	"context"
+	"io"
 
 	"git.rob.mx/nidito/chinampa/pkg/runtime"
 	"github.com/sirupsen/logrus"
@@ -45,6 +46,10 @@ func Configure(name string, level Level) {
 	} else {
 		logrus.SetLevel(logrus.AllLevels[level])
 	}
+}
+
+func SetOutput(out io.Writer) {
+	logrus.SetOutput(out)
 }
 
 func Debug(args ...any) {
