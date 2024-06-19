@@ -12,8 +12,6 @@ package statuscode
 const (
 	// Ok means everything is fine.
 	Ok = 0
-	// RenderHelp provides answers to life, the universe and everything; also, renders help.
-	RenderHelp = 42
 	// Usage means bad arguments were provided by the user.
 	Usage = 64
 	// ProgrammerError means the developer made a mistake.

@@ -53,9 +53,9 @@ By default, and unless ﹅` + env.NoColor + `﹅ is set, ﹅@chinampa@ help﹅ w
 		if len(args) > 0 && c != nil && c.Name() != args[len(args)-1] {
 			c, topicArgs, err := c.Root().Find(args)
 			if err == nil && c != nil && len(topicArgs) == 0 {
-				// exact command help
+				// user requestd command help with flag command
 				cobra.CheckErr(c.Help())
-				os.Exit(statuscode.RenderHelp)
+				os.Exit(statuscode.Ok)
 				return
 			}
 
@@ -74,9 +74,12 @@ By default, and unless ﹅` + env.NoColor + `﹅ is set, ﹅@chinampa@ help﹅ w
 			os.Exit(statuscode.NotFound)
 		}
 
+		// top-level help with no arguments called
+		// write to stdout
+		c.SetOut(os.Stdout)
 		c.InitDefaultHelpFlag() // make possible 'help' flag to be shown
 		cobra.CheckErr(c.Help())
 
-		os.Exit(statuscode.RenderHelp)
+		os.Exit(statuscode.Ok)
 	},
 }

@@ -25,12 +25,8 @@ func showHelp(cmd *cobra.Command) {
 // HandleCobraExit is called when a command errors out or was not found.
 func HandleCobraExit(cmd *cobra.Command, err error) error {
 	if err == nil {
-		ok, err := cmd.PersistentFlags().GetBool(_c.HelpCommandName)
-		if cmd.Name() == _c.HelpCommandName || err == nil && ok {
-			os.Exit(statuscode.RenderHelp)
-		}
-
 		os.Exit(statuscode.Ok)
+		return nil
 	}
 
 	switch err.(type) {
