@@ -137,6 +137,11 @@ func (opt *Option) ToString() string {
 	return stringValue
 }
 
+// Repeats tells if an option should be presented as a list.
+func (opt *Option) Repeats() bool {
+	return opt.Repeated
+}
+
 func (opt *Option) internalValidate(name, current string) error {
 	if current == "" {
 		return nil

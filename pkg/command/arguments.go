@@ -182,6 +182,11 @@ func (arg *Argument) SetValue(value []string) {
 	arg.provided = &value
 }
 
+// Repeats tells if an argument should be presented as a list.
+func (arg *Argument) Repeats() bool {
+	return arg.Variadic
+}
+
 func (arg *Argument) IsKnown() bool {
 	return arg.provided != nil && len(*arg.provided) > 0
 }
