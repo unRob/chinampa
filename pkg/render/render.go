@@ -42,7 +42,7 @@ func Markdown(content []byte, withColor bool) ([]byte, error) {
 		default:
 			// Glamour selects a style for the user.
 			styleFunc = glamour.WithStandardStyle("auto")
-			if style != "" {
+			if style != "auto" {
 				logger.Warnf("Unknown %s=%s, assuming \"auto\"", env.HelpStyle, style)
 			}
 		}
